@@ -8,7 +8,7 @@ CREATE TABLE data_source {
   org      VARCHAR(64),
   uri      VARCHAR(1000),
   note     TEXT
-)  ENGINE=INNODB;
+);
 
 INSERT INTO data_source VALUES ( 1, 'CHGIS', 'China Historical GIS', 'Fudan University, Center for Historical Geography', '', '');
 INSERT INTO data_source VALUES ( 2, 'CITAS', 'China in Time and Space', 'Center for Studies in Demography and Ecology, University of Washington',
@@ -20,7 +20,7 @@ INSERT INTO data_source VALUES ( 4, 'RAS', 'Russian Academy of Sciences', '', ''
 -- In chgis3, the prefixes are cts [CITAS], nma [NIMA], ras [RAS].
 
 CREATE TABLE feature_type (
-  feature_type_id              INT NOT NULL,
+  feature_type_id              INT,
 
   -- uri for recognized linked data vocabulary ?? more than one
   ld_vocab                     VARCHAR(24),
@@ -40,37 +40,54 @@ CREATE TABLE feature_type (
 
   PRIMARY KEY  (feature_type_id)
 
-)  ENGINE=INNODB;
+);
+
+-- look up table of 6 rules
+CREATE TABLE date_rule (
+  id                           INT,
+  rule                         VARCHAR(512),
+
+  PRIMARY KEY  (id)
+
+);
+
 
 --  combination of main3 and gis_info tables
---  need to require at least one spelling of type vernacular
 CREATE TABLE placename (
 
-  placename_id   INT auto_increment,        -- use for joins and internal purposes
-  order_id       INT NOT NULL,              -- the chgis primary identifier (not PK)
+  placename_id        INT auto_increment,        -- use for joins and internal purposes
+  order_id            INT NOT NULL,              -- the chgis primary identifier (not PK)
 
-  data_src       ENUM ('CHGIS', 'CITAS', 'NIMA', 'RAS'),
-  feature_type_id INT NOT NULL,
+  data_src            ENUM ('CHGIS', 'CITAS', 'NIMA', 'RAS'),
+  feature_type_id     INT NOT NULL,
 
+  lev_rank            CHAR(2) default NULL,      -- WHAT IS THIS?
 
 -- temporal   -- prefer to require ISO 8601 as Calendar and formatting
               -- otherwise two fields:  calendar AND format
               -- or multiples in joined table
 
+  beg_chg_type        VARCHAR(60),                  -- are these lookups?, e.g. type 'time-slice'
+  beg_chg_eng         VARCHAR(60),
+  end_chg_type        VARCHAR(60),
+  end_chg_eng         VARCHAR(60),
+
+  beg_yr              INT,                          -- ISO 8601 ?
+  beg_rule            INT,                          -- FK, change from char(1)
+  end_yr              INT,                          -- ISO 8601 ?
+  end_rule            INT,                          -- FK, change from char(1)
+
+
 
 -- spatial
-  sys_id         varchar(30) NOT NULL default '',   -- globally unique id - is this a UUID?
-                                                    -- is this used or exposed?
---  obj_type       ENUM('point', 'polygon', 'line'),      -- prev: varchar(10) default NULL
+
+  --  sys_id         varchar(30) NOT NULL default '',   -- globally unique id
+                                                        -- is this used or exposed?
+  obj_type       ENUM('point', 'polygon', 'line'),      -- prev: varchar(10) default NULL
 
   xy_type        varchar(20) default NULL,          -- consider ENUM or lookup
   x_coord        varchar(30) default NULL,          -- why not float ??
   y_coord        varchar(30) default NULL,
-
---  beg_yr int(8) default NULL,
-  beg_rule char(1) default NULL,
---  end_yr int(8) default NULL,
-  end_rule char(1) default NULL,
 
   geo_src        varchar(512),                             -- is this a note?
   compiler       varchar(60) default NULL,
@@ -92,9 +109,12 @@ CREATE TABLE placename (
 
 FOREIGN KEY type_id REFERENCES(feature_type.feature_type_id)
 
-)  ENGINE=INNODB;
+);
+
 
 -- textual representation of a placename
+-- for type 'vernacular', require only one per placename
+-- for types 'present location' and 'present jurisdiction' only allow at most one of each per placename
 CREATE TABLE spelling (
 
   spelling_id        INT auto_increment,
@@ -123,7 +143,7 @@ CREATE TABLE spelling (
   FOREIGN KEY alternate_of_id REFERENCES spelling.spelling_id
 
 
-)  ENGINE=INNODB;
+);
 
 
 CREATE TABLE spatial_definition (
@@ -149,6 +169,7 @@ CREATE TABLE spatial_definition (
   PRIMARY KEY (spatial_definition_id),
 );
 
+
 -- if only one of these per parent, then combine
 CREATE TABLE spatial_system_ref (
   spatial_system_ref_id       INT auto_increment,
@@ -163,3 +184,20 @@ CREATE TABLE spatial_system_ref (
   PRIMARY KEY (spatial_system_ref_id),
   FOREIGN KEY spatial_definition_id REFERENCES spatial_definition.spatial_definition_id
 );
+
+-- can this, or should this, be generalized ? with a relationship_type field
+CREATE TABLE admin_seat (
+  id                          INT auto_increment,
+  placename_id                INT NOT NULL,                  -- governed admin unit
+  seat_id                     INT NOT NULL,
+  relationship_type           ENUM( 'a', 'b', 'c'),          -- FIXME
+  begin_date                  VARCHAR(10),
+  end_date                    VARCHAR(10),
+  note                        VARCHAR(1028)
+
+  PRIMARY KEY (id),
+  FOREIGN KEY placename_id REFERENCES placename.placename_id,
+  FOREIGN KEY seat_id REFERENCES placename.placename_id
+);
+
+

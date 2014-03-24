@@ -44,14 +44,6 @@ CREATE TABLE placename (
   name_utf_alt   VARCHAR(128),
   pres_loc       VARCHAR(512),              -- is this a discursive note?
 
-  beg_chg_type   VARCHAR(60) default NULL,  -- these should all default to NULL 'by default'
-  beg_chg_eng    VARCHAR(60) default NULL,
-  end_chg_type   VARCHAR(60) default NULL,
-  end_chg_eng    VARCHAR(60) default NULL,
-
-  lev_rank       CHAR(2) default NULL,
-  beg_yr         INT(8) default NULL,
-  end_yr         INT(8) default NULL,
 
 --  pgn_note_id    VARCHAR(20) default NULL,     --
 --  pt_note_id     VARCHAR(20) default NULL,
@@ -60,6 +52,20 @@ CREATE TABLE placename (
 --  pgn_id         VARCHAR(20) default NULL,
 --  pt_id          VARCHAR(20) default NULL,
 --  line_id        VARCHAR(20) default NULL,
+
+
+--temporal
+
+  beg_chg_type   VARCHAR(60) default NULL,  -- these should all default to NULL 'by default'
+  beg_chg_eng    VARCHAR(60) default NULL,
+  end_chg_type   VARCHAR(60) default NULL,
+  end_chg_eng    VARCHAR(60) default NULL,
+
+  lev_rank       CHAR(2) default NULL,
+  beg_yr int(8) default NULL,
+  beg_rule char(1) default NULL,
+  end_yr int(8) default NULL,
+  end_rule char(1) default NULL,
 
 
 -- historical context, also see preceeded_by table
@@ -73,10 +79,6 @@ CREATE TABLE placename (
   x_coord        varchar(30) default NULL,          -- why not float ??
   y_coord        varchar(30) default NULL,
 
---  beg_yr int(8) default NULL,
-  beg_rule char(1) default NULL,
---  end_yr int(8) default NULL,
-  end_rule char(1) default NULL,
 
   obj_type       ENUM('point', 'polygon', 'line'),      -- prev: varchar(10) default NULL
   geo_src        varchar(512),                             -- is this a note?
