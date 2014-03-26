@@ -2,12 +2,14 @@
 
 
 CREATE TABLE data_source {
-  id       INT NOT NULL,
+  id       INT,
   abbr     VARCHAR(10) NOT NULL,
   name     VARCHAR(32) NOT NULL,
   org      VARCHAR(64),
   uri      VARCHAR(1000),
   note     VARCHAR(1028)
+
+  PRIMARY KEY (id)
 );
 
 INSERT INTO data_source VALUES ( 1, 'CHGIS', 'China Historical GIS', 'Fudan University, Center for Historical Geography', '', '');
@@ -20,31 +22,41 @@ INSERT INTO data_source VALUES ( 4, 'RAS', 'Russian Academy of Sciences', '', ''
 -- In chgis3, the prefixes are cts [CITAS], nma [NIMA], ras [RAS].
 
 CREATE TABLE feature_type (
-  feature_type_id              INT,
+  feature_type_id              INT,                -- v4: hv_ft_id
+
+  vernacular_lang              VARCHAR(10),        -- 'zh' for chinese
+  vernacular_name              VARCHAR(100),       -- v4: hv_ft_ch
+
+  transcription_system         VARCHAR(10),        -- 'py'
+  transcription_name           VARCHAR(100),       -- v4: hv_ft_py
+
+  translation_lang             VARCHAR(16),        -- 'en'
+  translation_name             VARCHAR(100),       -- v4: hv_ft_eng
+
+  adl_class                    VARCHAR(64),         -- v4: ads_class
+
+  data_source                  VARCHAR(10),
+  citation                     VARCHAR(256),        -- prev: source
+
+  note                         VARCHAR(512),        -- v4: note
 
   -- uri for recognized linked data vocabulary ?? more than one
   ld_vocab                     VARCHAR(24),
   ld_uri                       VARCHAR(1028),
 
-  -- this arrangement of names assumes only one of each type of name, unlike with placename spellings
-  vernacular_lang              VARCHAR(8),
-  vernacular_name              VARCHAR(100),
-
-  transcription_system         VARCHAR(8),
-  transcription_name           VARCHAR(100),
-
-  translation_lang             VARCHAR(8),
-  translation_name             VARCHAR(100),
-
-  note                         VARCHAR(512)
-
   PRIMARY KEY  (feature_type_id)
 );
+
 
 -- look up table of 6 rules
 CREATE TABLE date_rule (
   id                           INT,
+  name                         VARCHAR(32),
   rule                         VARCHAR(512),
+
+  -- uri for recognized linked data vocabulary ?? more than one
+  ld_vocab                     VARCHAR(24),
+  ld_uri                       VARCHAR(1028),
 
   PRIMARY KEY  (id)
 );
