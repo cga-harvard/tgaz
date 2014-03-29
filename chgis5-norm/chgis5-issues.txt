@@ -1,0 +1,21 @@
+chgis5 schema questions outstanding:
+
+* basic problem of not using the 'handle id' as the primary key 
+
+* spelling script as enum ? 
+* is name_utf 'vernacular with traditional script'?
+* is name_utf_alt 'vernacular with simplified script'?
+* switch 'transcription_of_id' to the actual vernacular text ?? 
+  or just indicate the type of referenced name, e.g. vernacular (does script matter?)
+  or is this field needed at all?
+* status of 'alternate_of_id' ? 
+* convert xy coords to floats from varchar?
+* RAS gis_info have some repeats of sys_ids for apparent variants ?? up to 7
+    but a few anomalies from other sources: 14831, cts_513337, relig_1354 
+* RAS has utf_name in Russian (cyrillic) - are these 'transcriptions' with no vernacular?
+  along with a py transcription.  See ras_999 where there is a py_name variant that
+  corresponds to a gis variant -- this does not break our model, I think.
+  Do I need to process the different sources separately? 
+* To make the schema more generally applicable, should we separate the FUDON fields into
+  a separate table that can easily be left off?  (This is where mongo would be useful.)
+

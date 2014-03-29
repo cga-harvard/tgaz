@@ -132,15 +132,22 @@ CREATE TABLE spelling (
   placename_id       INT NOT NULL,
   spelling_type      ENUM('vernacular', 'exonym', 'transcription') NOT NULL,
   lang               VARCHAR(8),             -- when type transcription, lang of original
-  script             VARCHAR(16),            -- simplified, traditional
+  script             VARCHAR(16),            -- simplified, traditional  CJK?
+                     -- ENUM('traditional chinese', 'simplified chinese',
+                     -- does 'simplified' also apply to Japanese Korean and Vietnamese?
+                     -- would also apply to many languages that alternatively use Arabic script
 --  default_form       BOOLEAN NOT NULL DEFAULT false,
                                              -- can infer preferred form in app from other fields
 
   written_form       VARCHAR(128),           -- i.e. the glyph, or text form
 
 -- for type 'transcription'
-  transcription_of_id       INT,                  -- NULL for other types
-  transcription_system      ENUM('py', 'wg', 'cyrillic', 'other'),                  --
+  transcription_system      ENUM('py', 'wg', 'cyrillic', 'arabic', 'romaji'),                  --
+  transcription_of_id       INT,             -- FK for vernacular spelling
+                                             -- ?? use actual text since FK is difficult to manage
+                                             -- or name the spelling type to reference other spelling ?
+                                             --
+                                             -- NULL for other types
 
 -- how is 'alternate' (as in chgis3) expressed here?
   alternate_of_id           INT,

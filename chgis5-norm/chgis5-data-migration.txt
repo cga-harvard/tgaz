@@ -1,0 +1,124 @@
+Exporting chgis3 data for later import into chgis5 schema
+
+
+query to export new 'placenames' source file
+
+enums:  object type, xy_type
+
+-----------------------------------------------
+-- lines
+select m.auto_id as t_id, m.line_id as sys_id, m.type_id as feature_type_id,
+m.data_src as data_source_id, null as source_note_id, m.lev_rank as level_rank,
+m.beg_chg_type, m.beg_chg_eng, m.end_chg_type, m.end_chg_eng,
+m.beg_yr, g.beg_rule as beg_rule_id, m.end_yr, g.end_rule as end_rule_id,
+g.obj_type, g.xy_type, cast(g.x_coord as decimal(10,6)) as x_coord,
+cast(g.y_coord as decimal(10,6)) as y_coord,
+geo_src, compiler, geo_compiler, entry_date, filename
+ 
+from main3 m, gis_info g
+where m.line_id = g.sys_id and line_id <> '';
+
+
+--------------------------------------------------
+--polygons
+
+
+-----------------------------------------------
+-- spellings for all types 
+-- t_id and sys_id just for tracking, need to obtain placename PK for FK 
+-- union of vernacular and transcription queries
+-- second part is pulling no rows, check that lines and utf_alt dont coincide
+
+select m.auto_id as t_id, m.line_id as sys_id, 
+'vernacular' as spelling_type, 'zh' as lang, 'traditional' as script, name_utf as written_form,
+null as transcription_system, null as transcription_of, null as attested_by 
+from main3 m where line_id <> '' and name_utf <> ''
+
+union
+select m.auto_id as t_id, m.line_id as sys_id, 
+'vernacular' as spelling_type, 'zh' as lang, 'simplified' as script, name_utf_alt as written_form,
+null as transcription_system, null as transcription_of, null as attested_by 
+from main3 m where line_id <> '' and name_utf_alt <> ''
+
+union
+select m.auto_id as t_id, m.line_id as sys_id, 
+'transcription' as spelling_type, 'zh' as lang, 'roman' as script, name_py as written_form,
+'py' as transcription_system, name_utf as transcription_of, null as attested_by 
+from main3 m where line_id <> '' and name_py <> '';
+
+
+
+
+--points
+
+
+describe main3;
++--------------+-------------+------+-----+---------+----------------+
+| Field        | Type        | Null | Key | Default | Extra          | 
++--------------+-------------+------+-----+---------+----------------+
+| order_id     | int(12)     | NO   | MUL | 0       |                | drop? seems in parallel with auto_id (pk)
+| name_py      | tinytext    | YES  |     | NULL    |                | y, spelling -> transcription, roman, py
+| name_utf     | tinytext    | YES  |     | NULL    |                | y, spelling -> vernacular, traditional
+| name_utf_alt | tinytext    | YES  |     | NULL    |                | y, spelling -> vernacular, simplified
+| pres_loc     | tinytext    | YES  |     | NULL    |                | y, present table
+| beg_chg_type | varchar(60) | YES  |     | NULL    |                | y,
+| beg_chg_eng  | varchar(60) | YES  |     | NULL    |                | y,
+| end_chg_type | varchar(60) | YES  |     | NULL    |                | y,
+| end_chg_eng  | varchar(60) | YES  |     | NULL    |                | y,
+| type_py      | varchar(80) | YES  |     | NULL    |                | drop dup
+| type_utf     | varchar(40) | YES  |     | NULL    |                | drop dup
+| type_id      | varchar(6)  | YES  |     | NULL    |                | y, fk
+| type_eng     | varchar(80) | YES  |     | NULL    |                | drop dup
+| lev_rank     | char(2)     | YES  |     | NULL    |                | y,
+| beg_yr       | int(8)      | YES  |     | NULL    |                | y,
+| end_yr       | int(8)      | YES  |     | NULL    |                | y,
+| pgn_note_id  | varchar(20) | YES  |     | NULL    |                | replace with source_notes pk, fk to src_notes but this is not always an int (relig_12345) 
+| pt_note_id   | varchar(20) | YES  |     | NULL    |                | replace with source notes pk, fk to src_notes but this is not always an int
+| pgn_id       | varchar(20) | YES  | MUL | NULL    |                | drop, use as flag for pgn select - dup of sys_id
+| pt_id        | varchar(20) | YES  | MUL | NULL    |                | drop, use as flag,  - dup of sys_id
+| line_id      | varchar(20) | YES  | MUL | NULL    |                | drop, use as dup of sys_id
+| data_src     | varchar(12) | YES  |     | NULL    |                | y, replace with enum or fk to lookup
+| auto_id      | int(12)     | NO   | PRI | NULL    | auto_increment | not needed for export; new auto-generated ids will be created on load into new db
++--------------+-------------+------+-----+---------+----------------+
+23 rows in set (0.00 sec)
+
+describe gis_info;
++--------------+-------------+------+-----+---------+-------+
+| Field        | Type        | Null | Key | Default | Extra |
++--------------+-------------+------+-----+---------+-------+
+| order_id     | int(12)     | NO   | PRI | 0       |       | drop
+| name_py      | tinytext    | YES  |     | NULL    |       | drop dup
+| name_utf     | tinytext    | YES  |     | NULL    |       | drop dup
+| name_utf_alt | tinytext    | YES  |     | NULL    |       | drop dup
+| sys_id       | varchar(30) | NO   | MUL |         |       | y - PK
+| xy_type      | varchar(20) | YES  |     | NULL    |       | y
+| x_coord      | varchar(30) | YES  |     | NULL    |       | y
+| y_coord      | varchar(30) | YES  |     | NULL    |       | y
+| pres_loc     | tinytext    | YES  |     | NULL    |       | drop dup
+| beg_yr       | int(8)      | YES  |     | NULL    |       | drop dup
+| beg_rule     | char(1)     | YES  |     | NULL    |       | y
+| end_yr       | int(8)      | YES  |     | NULL    |       | drop dup
+| end_rule     | char(1)     | YES  |     | NULL    |       | y
+| obj_type     | varchar(10) | YES  |     | NULL    |       | y
+| geo_src      | tinytext    | YES  |     | NULL    |       | y
+| compiler     | varchar(60) | YES  |     | NULL    |       | y 
+| geocompiler  | varchar(60) | YES  |     | NULL    |       | y
+| entry_date   | varchar(12) | YES  |     | NULL    |       | y
+| filename     | tinytext    | YES  |     | NULL    |       | y
+| src          | varchar(12) | YES  |     | NULL    |       | drop dup
++--------------+-------------+------+-----+---------+-------+
+
+
+describe src_notes;
++--------------+-------------+------+-----+---------+----------------+
+| Field        | Type        | Null | Key | Default | Extra          |
++--------------+-------------+------+-----+---------+----------------+
+| nts_comp     | varchar(60) | YES  |     | NULL    |                |
+| nts_noteid   | varchar(12) | YES  |     | NULL    |                |
+| nts_nmpy     | tinytext    | YES  |     | NULL    |                |
+| nts_nmch     | varchar(40) | YES  |     | NULL    |                |
+| nts_nmft     | varchar(40) | YES  |     | NULL    |                |
+| nts_fullnote | text        | YES  |     | NULL    |                |
+| nts_autoid   | int(12)     | NO   | PRI | NULL    | auto_increment |
++--------------+-------------+------+-----+---------+----------------+
+
