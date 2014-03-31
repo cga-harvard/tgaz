@@ -67,18 +67,19 @@ CREATE TABLE placename (
 
   placename_id        INT auto_increment,        -- use for joins and internal purposes
                                                  -- dropped order_id
+                                                 -- may be possible to use sys-Id as PK but no auto-increment
   sys_id              VARCHAR(30) NOT NULL,              -- the chgis primary identifier (not PK)
 
   feature_type_id     INT NOT NULL,
   data_src_id         INT NOT NULL,              -- FK, otherwise: ENUM ('CHGIS', 'CITAS', 'NIMA', 'RAS'),
   src_note_id         INT,                       -- FK, can be NULL
 
+  alternate_of_id     INT,                       -- FK, can be NULL
+
   level_rank          CHAR(2) default NULL,      -- prev: lev_rank ; administrative level assigned by FUDON
 
 
--- temporal   -- prefer to require ISO 8601 as Calendar and formatting
-              -- otherwise two fields:  calendar AND format
-              -- or multiples in joined table
+-- temporal
 
   beg_chg_type        VARCHAR(60),                  -- from FUDON, leave as is
   beg_chg_eng         VARCHAR(60),
@@ -118,7 +119,7 @@ FOREIGN KEY type_id REFERENCES(feature_type.feature_type_id),
 FOREIGN KEY data_src_id REFERENCES(data_source.id),
 FOREIGN KEY src_note_id REFERENCES(src_note.feature_type_id),
 FOREIGN KEY type_id REFERENCES(feature_type.feature_type_id),
--- FK for source note
+FOREIGN KEY alternate_of_id REFERENCES(placename.placename_id)
 -- FKs for rules  FIXME
 
 );
@@ -130,10 +131,13 @@ CREATE TABLE spelling (
 
   spelling_id        INT auto_increment,
   placename_id       INT NOT NULL,
-  spelling_type      ENUM('vernacular', 'exonym', 'transcription') NOT NULL,
+  spelling_type      ENUM('vernacular', 'exonym', 'transcription', 'type not known') NOT NULL,
   lang               VARCHAR(8),             -- when type transcription, lang of original
-  script             VARCHAR(16),            -- simplified, traditional  CJK?
-                     -- ENUM('traditional chinese', 'simplified chinese',
+
+  -- for type 'vernacular'
+  script             ENUM('traditional chinese', 'simplified chinese', 'variant chinese',
+                          'kanji', 'hirigana', 'katakana'
+                          'korean characters', 'hangul');
                      -- does 'simplified' also apply to Japanese Korean and Vietnamese?
                      -- would also apply to many languages that alternatively use Arabic script
 --  default_form       BOOLEAN NOT NULL DEFAULT false,
@@ -141,19 +145,11 @@ CREATE TABLE spelling (
 
   written_form       VARCHAR(128),           -- i.e. the glyph, or text form
 
--- for type 'transcription'
-  transcription_system      ENUM('py', 'wg', 'cyrillic', 'arabic', 'romaji'),                  --
-  transcription_of_id       INT,             -- FK for vernacular spelling
-                                             -- ?? use actual text since FK is difficult to manage
-                                             -- or name the spelling type to reference other spelling ?
-                                             --
-                                             -- NULL for other types
+  -- for type 'transcription'
+  transcription_system      ENUM('py', 'wg', 'cyrillic', 'arabic', 'roman'),                  --
 
--- how is 'alternate' (as in chgis3) expressed here?
-  alternate_of_id           INT,
-
--- note field?  source info?  citation?  attestation
   attested_by               VARCHAR(128),
+  note                      VARCHAR(512),
 
   PRIMARY KEY (spelling_id),
   FOREIGN KEY placename_id REFERENCES placename.placename_id,
@@ -205,29 +201,27 @@ CREATE TABLE wkt_definition (
 -- external GIS citation, as in an index
 -- FIXME  what is the joined table ?
 CREATE TABLE spatial_system_ref (
-  spatial_system_ref_id       INT auto_increment,
-  spatial_definition_id       INT NOT NULL,
+  id                          INT auto_increment,
+  placename_id                INT NOT NULL,
 
-  system_name                 VARCHAR(20),    -- lookup, e.g. geohex or watersheds
-  level                       INT,            -- is this applicable to all systems?
+  system_name                 ENUM('Geohex' 'Watershed', 'Other') NOT NULL,
+  level                       INT,                           -- for geohex, only
   location_uri                VARCHAR(100),
   location_id                 VARCHAR(100),
 
 
   PRIMARY KEY (spatial_system_ref_id),
-  FOREIGN KEY spatial_definition_id REFERENCES spatial_definition.spatial_definition_id
+  FOREIGN KEY spatial_definition_id REFERENCES placename.placename_id
 );
 
--- can this, or should this, be generalized ? with a relationship_type field
--- combine with prec?
-CREATE TABLE historical_context (   -- admin_relationship
+
+CREATE TABLE admin_seat (
   id                          INT auto_increment,
   placename_id                INT NOT NULL,                  -- governed admin unit
   seat_id                     INT NOT NULL,
-  relationship_type           ENUM( 'a', 'b', 'c'),          -- FIXME
   begin_date                  VARCHAR(10),
   end_date                    VARCHAR(10),
-  note                        VARCHAR(1028)
+  note                        VARCHAR(1028),
 
   PRIMARY KEY (id),
   FOREIGN KEY placename_id REFERENCES placename.placename_id,
@@ -236,7 +230,7 @@ CREATE TABLE historical_context (   -- admin_relationship
 
 
 -- assumes multiple ids per placename - otherwise combine with main table
--- n to 1!!!!
+-- n to 1, as in a lookup table
 CREATE TABLE src_note (
   src_note_id                 INT auto_increment,
 
@@ -270,16 +264,9 @@ CREATE TABLE present_location (
   id                           INT auto_increment,
   placename_id                 INT NOT NULL,
   type                         ENUM('location', 'jurisdiction'),
-  vernacular_lang              VARCHAR(8),
-  vernacular_name              VARCHAR(100),
-
-  transcription_system         VARCHAR(8),
-  transcription_name           VARCHAR(100),
-
-  translation_lang             VARCHAR(8),
-  translation_name             VARCHAR(100),
-
-  note                         VARCHAR(512),      -- is this needed?
+  text_value                   VARCHAR(128),
+  source                       ENUM('Fudon', 'Google', 'Other') NOT NULL,
+  attestation                  VARCHAR(512),
 
   PRIMARY KEY id,
   FOREIGN KEY placename_id REFERENCES placename.placename_id
@@ -291,9 +278,6 @@ CREATE TABLE prec_by (
   id                           INT auto_increment,     -- prev: pby_uniq_id
   placename_id                 INT NOT NULL,           -- prev: pby_by_id vc12
   pn_prec_id                   INT NOT NULL,           -- prev: pby_prev_id  vc12
-
-  begin_year                   SMALLINT,            -- prev:  pby_begyr int8
-  end_year                     SMALLINT,            -- prev:  pby_endyr int8
 
   PRIMARY KEY  (id),
   FOREIGN KEY placename_id REFERENCES placename.placename_id,
@@ -320,4 +304,17 @@ CREATE TABLE partof (
 CREATE INDEX partof_child_index ON partof.child_id;
 CREATE INDEX partof_parent_index ON partof.parent_id;
 
+-- calculated values from recursive part-of relationships
+-- one-to-one with placename table
+CREATE TABLE admin_hierarchy (
+  id                           INT auto_increment,
+  placename_id                 INT NOT NULL,
+  complete                     CHAR(1),               -- y - yes, n - No
+  text-value                   VARCHAR(1028),
 
+  PRIMARY KEY (id),
+  FOREIGN KEY parent_id REFERENCES(placename.placename_id)
+
+);
+
+-- Lookup table for admin_hierarchy ?? See Lex's v.5 work
