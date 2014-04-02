@@ -124,6 +124,19 @@ FOREIGN KEY alternate_of_id REFERENCES(placename.placename_id)
 
 );
 
+-- lookup table
+  --             ('traditional chinese', 'simplified chinese', 'variant chinese',
+  --                        'kanji', 'hirigana', 'katakana' 'korean characters', 'hangul');
+  --                   add those where only one per lang:  cyrillic, mongolian, etc.
+CREATE TABLE script (
+  id                 CHAR(3),                  -- ?? decide on authorized codes
+  name               VARCHAR(32) NOT NULL,
+  lang_subtype       VARCHAR(8),               -- e.g. 'fr' for romanized as in French
+  note               VARCHAR(512)
+
+  PRIMARY KEY id
+)
+
 -- textual representation of a placename
 -- for type 'vernacular', require only one per placename
 -- for types 'present location' and 'present jurisdiction' only allow at most one of each per placename
@@ -131,22 +144,15 @@ CREATE TABLE spelling (
 
   spelling_id        INT auto_increment,
   placename_id       INT NOT NULL,
-  spelling_type      ENUM('vernacular', 'exonym', 'transcription', 'type not known') NOT NULL,
-  lang               VARCHAR(8),             -- when type transcription, lang of original
+--  spelling_type      ENUM('vernacular', 'transcription') NOT NULL,  -- possibly 'transliteration' instead
+--  lang               VARCHAR(8),             -- removed
 
-  -- for type 'vernacular'
-  script             ENUM('traditional chinese', 'simplified chinese', 'variant chinese',
-                          'kanji', 'hirigana', 'katakana'
-                          'korean characters', 'hangul');
-                     -- does 'simplified' also apply to Japanese Korean and Vietnamese?
-                     -- would also apply to many languages that alternatively use Arabic script
---  default_form       BOOLEAN NOT NULL DEFAULT false,
-                                             -- can infer preferred form in app from other fields
-
+  script_id          INT,
   written_form       VARCHAR(128),           -- i.e. the glyph, or text form
+  exonym_language    VARCHAR(8),             -- e.g. 'es' for Spanish in the case of 'Las Vegas'
 
   -- for type 'transcription'
-  transcription_system      ENUM('py', 'wg', 'cyrillic', 'arabic', 'roman'),                  --
+  transcription_system      ENUM('py', 'wg', 'romaji'),                  --
 
   attested_by               VARCHAR(128),
   note                      VARCHAR(512),
@@ -154,7 +160,8 @@ CREATE TABLE spelling (
   PRIMARY KEY (spelling_id),
   FOREIGN KEY placename_id REFERENCES placename.placename_id,
   FOREIGN KEY transcription_of_id REFERENCES spelling.spelling_id,
-  FOREIGN KEY alternate_of_id REFERENCES spelling.spelling_id
+  FOREIGN KEY alternate_of_id REFERENCES spelling.spelling_id,
+  FOREIGN KEY script_id REFERENCES script.id
 
 );
 
