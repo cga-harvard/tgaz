@@ -1,13 +1,13 @@
 --  chgis5 - a normalized schema
 
 
-CREATE TABLE data_source {
+CREATE TABLE data_source (
   id       INT,
   abbr     VARCHAR(10) NOT NULL,
-  name     VARCHAR(32) NOT NULL,
-  org      VARCHAR(64),
-  uri      VARCHAR(1000),
-  note     VARCHAR(1028)
+  name     VARCHAR(64) NOT NULL,
+  org      VARCHAR(128),
+  uri      VARCHAR(1024),
+  note     VARCHAR(1024),
 
   PRIMARY KEY (id)
 );
@@ -15,7 +15,7 @@ CREATE TABLE data_source {
 INSERT INTO data_source VALUES ( 1, 'CHGIS', 'China Historical GIS', 'Fudan University, Center for Historical Geography', '', '');
 INSERT INTO data_source VALUES ( 2, 'CITAS', 'China in Time and Space', 'Center for Studies in Demography and Ecology, University of Washington',
   'http://citas.csde.washington.edu/data/data.html', '');
-INSERT INTO data_source VALUES ( 3, 'NIMA', 'National Geospatial-Intelligence Agency (United States)',
+INSERT INTO data_source VALUES ( 3, 'NIMA', '', 'National Geospatial-Intelligence Agency (United States)',
   'http://earth-info.nga.mil/gns/html/index.html', 'formerly: National Imagery and Mapping Agency');
 INSERT INTO data_source VALUES ( 4, 'RAS', 'Russian Academy of Sciences', '', '', 'See: http://www.fas.harvard.edu/~chgis/data/rus_geo/)');
 
@@ -72,6 +72,7 @@ CREATE TABLE placename (
 
   feature_type_id     INT NOT NULL,
   data_src_id         INT NOT NULL,              -- FK, otherwise: ENUM ('CHGIS', 'CITAS', 'NIMA', 'RAS'),
+  data_src_ref        VARCHAR(32),               -- original id from source
   src_note_id         INT,                       -- FK, can be NULL
 
   alternate_of_id     INT,                       -- FK, can be NULL
@@ -238,29 +239,23 @@ CREATE TABLE admin_seat (
 
 -- assumes multiple ids per placename - otherwise combine with main table
 -- n to 1, as in a lookup table
-CREATE TABLE src_note (
-  src_note_id                 INT auto_increment,
+CREATE TABLE source_note (
+  id                           INT auto_increment,
 
-  note_id                      VARCHAR(12),  -- a 5 digit number, sometimes prefixed with 'relig_'
-                                             -- FIXME - make sure the links in the main table go to the PK
-                                             -- find a better field name
+  src_note_ref                 VARCHAR(32),       -- a 5 digit number, sometimes prefixed with 'relig_'
+                                                  -- prev: note_id
+                                                  --  make sure the links in the main table go to the PK
+                                                  -- ref can be null
+  source                       ENUM('Fudan', 'Wikipedia'),
   compiler                     VARCHAR(64),          -- person's name, prev: nts_comp
 
-  vernacular_lang              VARCHAR(8),
-  vernacular_name              VARCHAR(100),         -- prev: nts_nmch  vc40
+  lang                         VARCHAR(8),
+  topic                        VARCHAR(128),         -- prev: nts_nmft  vc40
+  uri                          VARCHAR(1024),        -- required if src_note_ref is null
 
-  -- FIXME
-  -- other vernacular: simplified vs trad.   -- prev:  nts_nmft vc40
+  full_text                    VARCHAR(2048),        -- prev: nts_fullnote
 
-  transcription_system         VARCHAR(8),
-  transcription_name           VARCHAR(100),         -- prev: nts_nmpy  tinytext
-
-  translation_lang             VARCHAR(8),
-  translation_name             VARCHAR(100),
-
-  full_text                    VARCHAR(1028),        -- prev: nts_fullnote
-
-  PRIMARY KEY  (src_note_id)
+  PRIMARY KEY  (id)
 );
 
 
@@ -272,7 +267,7 @@ CREATE TABLE present_location (
   placename_id                 INT NOT NULL,
   type                         ENUM('location', 'jurisdiction'),
   text_value                   VARCHAR(128),
-  source                       ENUM('Fudon', 'Google', 'Other') NOT NULL,
+  source                       ENUM('Fudan', 'Google', 'Other') NOT NULL,
   attestation                  VARCHAR(512),
 
   PRIMARY KEY id,

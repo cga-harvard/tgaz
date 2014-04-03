@@ -1,0 +1,13 @@
+
+TGAZ, v. 1.0, Business Rules
+
+For a given placename:
+
+1.1   There must be at least one spelling.
+1.2   There can't be more than one spelling in the same script.
+1.3   There can't be more than one spelling using the same transcription-system value.
+
+For a given source_note,
+
+2.1   If src_note_ref is null, then uri must be present
+2.2   src_note_ref + source is unique
