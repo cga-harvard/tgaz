@@ -48,6 +48,17 @@ CREATE TABLE feature_type (
 );
 
 
+CREATE TABLE transcription_system (
+  id                           INT,
+  name                         VARCHAR(32),
+  lang                         VARCHAR(8),
+  dialect                      VARCHAR(32),
+  note                         VARCHAR(512),
+
+  PRIMARY KEY (id)
+)
+
+
 -- look up table of 6 rules
 CREATE TABLE date_rule (
   id                           INT,
@@ -153,14 +164,14 @@ CREATE TABLE spelling (
   exonym_language    VARCHAR(8),             -- e.g. 'es' for Spanish in the case of 'Las Vegas'
 
   -- for type 'transcription'
-  transcription_system      ENUM('py', 'wg', 'romaji'),                  --
+  transcription_sys_id      INT,                  --
 
   attested_by               VARCHAR(128),
   note                      VARCHAR(512),
 
   PRIMARY KEY (spelling_id),
   FOREIGN KEY placename_id REFERENCES placename.placename_id,
-  FOREIGN KEY transcription_of_id REFERENCES spelling.spelling_id,
+  FOREIGN KEY transcription_sys_id REFERENCES transcription_system.id,
   FOREIGN KEY alternate_of_id REFERENCES spelling.spelling_id,
   FOREIGN KEY script_id REFERENCES script.id
 
@@ -178,7 +189,7 @@ CREATE TABLE temporal_annotation (
   lang                      VARCHAR(8),      -- ISO code
   note                      VARCHAR(512),
 
-  PRIMARY KEY (spelling_id),
+  PRIMARY KEY (id),
   FOREIGN KEY placename_id REFERENCES placename.placename_id,
   FOREIGN KEY accuracy_rule_id REFERENCES(data_rule.id)       -- is this linked to the right table?
 
