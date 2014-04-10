@@ -1,0 +1,76 @@
+{
+  "system" : "CHGIS",
+  "license" : "",
+
+  "uri" : "http://chgis.harvard.edu/placename/23358",
+  "sys_id" : "hvd_23358",
+  "alternate of": "1234",
+
+  "spellings" : [
+    { "simplified Chinese" :  "戴埠镇",
+      "attested by" : "",
+      "note" : "" },
+    { "traditional Chinese" :  "戴埠鎮",
+      "attested by" : "",
+      "note" : "" },
+    { "transcribed in Pinyin" : "Daibuzhen"
+    }
+  ],
+
+  "feature_type" : {
+      "type name" : "",
+      "transcribed in xxx": "",
+      "English translation" : ""
+    },
+
+  "temporal" : {
+    "years" : "1820 - 1820",
+    "begin rule" : "7",
+    "end rule"   : "7"
+  },
+
+  "spatial" : {
+    "level rank" : "7",
+    "object type" : "point",
+    "xy_type" : "point",
+    "longitude" : "119.50119",
+    "latitude" : "31.30622",
+    "geo source" : "",
+  },
+
+  "historical  context" : {
+    "parents" : [
+      {
+          "id" : "30083",
+          "uri" : "http://chgis.harvard.edu/placename/30083",
+          "name in simplified Chinese" : "浙江东道节度使",
+          "name transcribed in Pinyin" : "Zhejiangdongdao Jiedushi",
+          "years" : "758 - 769"
+      },
+      {
+          "id" : "30084",
+          "uri" : "http://chgis.harvard.edu/placename/30084",
+          "name in simplified Chinese" : "浙江东道节度使",
+          "name transcribed in Pinyin" : "Zhejiangdongdaodu Tuanlianguanchashi",
+          "years" : "770 - 778"
+      }
+    ],
+    "preceded by" : {
+      "ancestor name in simplified Chinese " : "东阳郡",
+      "ancestor_name_alt" : "東陽郡",
+      "ancestor_id" : "32181",
+      "ancestor_name_romanized" : "Dongyang Jun"
+    }
+  },
+
+  "data source" : "CHGIS",
+  "source_note" : {
+
+  },
+
+  "external links" : {
+
+    "google_map" : "http://maps.google.com/maps?q=29.104712,119.649918(Wu Zhou)&amp;spn=0.1,0.1&amp;t=m&amp;hl=e&amp;z=9"
+  }
+
+}
