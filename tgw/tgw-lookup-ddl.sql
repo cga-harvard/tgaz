@@ -1,13 +1,14 @@
 -- data source entities
 --
 CREATE TABLE IF NOT EXISTS dsrc (
-  id       VARCHAR(10) NOT NULL,  -- an abbreviation in upper case
+  id       VARCHAR(10),               -- an abbreviation in upper case
   name     VARCHAR(64) NOT NULL,
   org      VARCHAR(128),
   uri      VARCHAR(1024),
   note     VARCHAR(1024),
 
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  UNIQUE KEY name_unique (name)
 ) ENGINE = INNODB;
 
 INSERT INTO dsrc VALUES ('CHGIS', 'China Historical GIS', 'Fudan University, Center for Historical Geography', NULL, NULL);
@@ -39,6 +40,8 @@ INSERT INTO drule VALUES (3, 'Rule 3', 'Year is set according to a Dynastic Titl
 INSERT INTO drule VALUES (4, 'Rule 4', 'Year is specified, such as "13th Year of the Kangxi Reign Period"', NULL, NULL);
 INSERT INTO drule VALUES (5, 'Rule 5', 'Season or Month is specified, such as "4th month of the Lunar year" or "autumn"', NULL, NULL);
 INSERT INTO drule VALUES (6, 'Rule 6', 'Date is specified, such as "jiachen day”', NULL, NULL);
+INSERT INTO drule VALUES (7, 'Rule 7', '', NULL, NULL);
+INSERT INTO drule VALUES (9, 'Rule 9', '', NULL, NULL);
 
 
 -- language script for placename spellings
@@ -96,18 +99,20 @@ INSERT INTO trsys VALUES ('rj', 'Romaji', 'ja', '', NULL);
 
 
 -- geographic feature types - in-house vocabulary
---
+--  name_vn is not unique
+--     recommendation: add field 'qualifier' to establish unique constraint with name_vn
 -- load existing data into ftype_xx table
 -- tranfer with:
 -- insert into ftype select id, name_ch, name_py, name_rm, adl_class, "CHGIS", NULL, note, NULL, NULL, NULL from ftype_xx;
 CREATE TABLE IF NOT EXISTS ftype (
   id                           INT AUTO_INCREMENT,  -- v4: hv_ft_id
 
-  name_ch                      VARCHAR(100),        -- v4: hv_ft_ch
-  name_py                      VARCHAR(100),        -- v4: hv_ft_py
-  name_rm                      VARCHAR(100),        -- v4: hv_ft_eng
+  name_vn                      VARCHAR(100),        -- v4: hv_ft_ch
+  name_alt                     VARCHAR(100),
+  name_tr                      VARCHAR(100),        -- v4: hv_ft_py
+  name_en                      VARCHAR(100),        -- v4: hv_ft_eng
 
-  adl_class                    VARCHAR(64),         -- v4: ads_class
+  adl_class                    VARCHAR(64),         -- v4: adl_class
 
   data_src                     VARCHAR(10),
   citation                     VARCHAR(256),        -- prev: source
@@ -115,10 +120,10 @@ CREATE TABLE IF NOT EXISTS ftype (
   note                         VARCHAR(512),        -- v4: note
 
   -- uri for recognized linked data vocabulary ?? more than one
-  ld_vocab                     VARCHAR(24),
+  -- ld_vocab                     VARCHAR(24),
   ld_uri                       VARCHAR(1028),
 
-  added_on                     TIMESTAMP,
+  added_on                     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  -- no auto update
 
   PRIMARY KEY  (id),
   INDEX data_src_idx (data_src),
@@ -147,6 +152,8 @@ CREATE TABLE IF NOT EXISTS snote (
   uri                          VARCHAR(1024),        -- required if src_note_ref is null
 
   full_text                    VARCHAR(2048),        -- prev: nts_fullnote
+
+  added_on                     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  -- no auto update
 
   PRIMARY KEY  (id),
   INDEX src_note_ref_idx (src_note_ref)

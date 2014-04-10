@@ -20,3 +20,4 @@ For feature types (ftype):
 For source notes (snote):
 
 4.1   If src_note_ref is NULL, the uri field must not be NULL
+4.2   If src_note_ref is not NULL, value must be unique

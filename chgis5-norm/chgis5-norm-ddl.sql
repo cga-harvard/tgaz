@@ -21,6 +21,9 @@ INSERT INTO data_source VALUES ( 4, 'RAS', 'Russian Academy of Sciences', '', ''
 
 -- In chgis3, the prefixes are cts [CITAS], nma [NIMA], ras [RAS].
 
+
+-- In chgis3, the status field should be handled as a report - to determine "id db"
+
 CREATE TABLE feature_type (
   feature_type_id              INT,                -- v4: hv_ft_id
 
@@ -202,7 +205,7 @@ CREATE TABLE temporal_annotation (
 CREATE TABLE wkt_definition (
   spatial_definition_id      INT auto_increment,
   placename_id               INT NOT NULL,
-  object_type_id             ENUM('point', 'polygon', 'linestring', 'multipoint', 'multilinestring',
+  object_type             ENUM('point', 'polygon', 'linestring', 'multipoint', 'multilinestring',
                                   'multipolygon', 'geometrycollection') NOT NULL,
   definition_type            ENUM('wkt') NOT NULL,        -- unnecessary ??
 
