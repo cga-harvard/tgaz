@@ -18,7 +18,8 @@ INSERT INTO data_src VALUES ('GNS', 'GNS Country Files', 'National Geospatial-In
   'http://earth-info.nga.mil/gns/html/index.html', 'formerly: National Imagery and Mapping Agency');
 INSERT INTO data_src VALUES ('RAS', 'Russian Academy of Sciences', NULL, NULL, 'See: http://www.fas.harvard.edu/~chgis/data/rus_geo/)');
 INSERT INTO data_src VALUES ('TBRC', 'Tibetan Buddhist Resource Center', '', 'http://www.tbrc.org', NULL);
-
+INSERT INTO data_src VALUES ('DDBC', 'Dharma Drum Buddhist College', '', 'http://authority.ddbc.edu.tw/place/', NULL);
+INSERT INTO data_src VALUES ('CBDB', 'China Biographical Database', '', 'http://isites.harvard.edu/icb/icb.do?keyword=k16229', NULL);
 
 -- data rules to show level of accuracy in ascribed dates in placenames
 --
