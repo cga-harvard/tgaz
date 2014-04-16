@@ -56,6 +56,7 @@ CREATE TABLE IF NOT EXISTS script (
   PRIMARY KEY (id)
 ) ENGINE = INNODB;
 
+INSERT INTO script VALUES (0, 'n/a', 'xx', '', NULL);
 INSERT INTO script VALUES (1, 'traditional Chinese', 'zh', '', NULL);
 INSERT INTO script VALUES (2, 'simplified Chinese', 'zh', '', NULL);
 INSERT INTO script VALUES (3, 'variant Chinese', 'zh', '', NULL);
@@ -90,6 +91,7 @@ CREATE TABLE IF NOT EXISTS trsys (
 ) ENGINE = INNODB;
 
 
+INSERT INTO trsys VALUES ('na', 'n/a', 'xx', '', NULL);
 INSERT INTO trsys VALUES ('py', 'Pinyin', 'zh', 'Mandarin', NULL);
 INSERT INTO trsys VALUES ('wg', 'Wade-Giles', 'zh', 'Mandarin', NULL);
 INSERT INTO trsys VALUES ('rj', 'Romaji', 'ja', '', NULL);
@@ -130,7 +132,9 @@ CREATE TABLE IF NOT EXISTS ftype (
     FOREIGN KEY (data_src)  REFERENCES dsrc(id)  ON DELETE SET NULL
 ) ENGINE = INNODB;
 
-
+-- special 'unknown' row
+INSERT INTO ftype VALUES (0, '未知', '未知', 'wei zhi', 'unknown', NULL, 'CHGIS', NULL, NULL);
+-- id = 0 didn't work probably due to the auto_increment, gave id as 1120
 
 
 -- needs citation field?

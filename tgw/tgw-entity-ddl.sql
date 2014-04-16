@@ -7,7 +7,7 @@ CREATE TABLE  IF NOT EXISTS placename (
                                                  -- may be possible to use sys-Id as PK but no auto-increment
   sys_id              VARCHAR(30) NOT NULL,              -- the chgis primary identifier (not PK)
 
-  ftype_id            INT,                       -- should be NOT NULL with an 'Unknown' value
+  ftype_id            INT NOT NULL,              -- should be NOT NULL with an 'Unknown' value
   dsrc_id             VARCHAR(10) NOT NULL,      -- FK
 
 --  dsrc_ref            VARCHAR(32),               -- original id from source notes ?? discard after migration ?
@@ -67,11 +67,11 @@ CREATE TABLE spelling (
 
   id                        INT auto_increment,
   placename_id              INT NOT NULL,
-  script_id                 INT,
+  script_id                 INT NOT NULL,
   written_form              VARCHAR(128),     -- i.e. the glyph, or text form
   exonym_lang               VARCHAR(8),       -- ISO 2-char, e.g. 'es' for Spanish in the case of 'Las Vegas'
 
-  trsys_id                  VARCHAR(10),              -- for type 'transcription', otherwise null
+  trsys_id                  VARCHAR(10) NOT NULL,              -- for type 'transcription', otherwise null
 
   attested_by               VARCHAR(128),
   note                      VARCHAR(512),
