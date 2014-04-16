@@ -1,6 +1,6 @@
 -- data source entities
 --
-CREATE TABLE IF NOT EXISTS dsrc (
+CREATE TABLE IF NOT EXISTS data_src (
   id       VARCHAR(10),               -- an abbreviation in upper case
   name     VARCHAR(64) NOT NULL,
   org      VARCHAR(128),
@@ -11,12 +11,13 @@ CREATE TABLE IF NOT EXISTS dsrc (
   UNIQUE KEY name_unique (name)
 ) ENGINE = INNODB;
 
-INSERT INTO dsrc VALUES ('CHGIS', 'China Historical GIS', 'Fudan University, Center for Historical Geography', NULL, NULL);
-INSERT INTO dsrc VALUES ('CITAS', 'China in Time and Space', 'Center for Studies in Demography and Ecology, University of Washington',
+INSERT INTO data_src VALUES ('CHGIS', 'China Historical GIS', 'Fudan University, Center for Historical Geography', NULL, NULL);
+INSERT INTO data_src VALUES ('CITAS', 'China in Time and Space', 'Center for Studies in Demography and Ecology, University of Washington',
   'http://citas.csde.washington.edu/data/data.html', NULL);
-INSERT INTO dsrc VALUES ('NIMA', '', 'National Geospatial-Intelligence Agency (United States)',
+INSERT INTO data_src VALUES ('GNS', 'GNS Country Files', 'National Geospatial-Intelligence Agency (United States)',
   'http://earth-info.nga.mil/gns/html/index.html', 'formerly: National Imagery and Mapping Agency');
-INSERT INTO dsrc VALUES ('RAS', 'Russian Academy of Sciences', NULL, NULL, 'See: http://www.fas.harvard.edu/~chgis/data/rus_geo/)');
+INSERT INTO data_src VALUES ('RAS', 'Russian Academy of Sciences', NULL, NULL, 'See: http://www.fas.harvard.edu/~chgis/data/rus_geo/)');
+INSERT INTO data_src VALUES ('TBRC', 'Tibetan Buddhist Resource Center', '', 'http://www.tbrc.org', NULL);
 
 
 -- data rules to show level of accuracy in ascribed dates in placenames
@@ -44,13 +45,14 @@ INSERT INTO drule VALUES (7, 'Rule 7', '', NULL, NULL);
 INSERT INTO drule VALUES (9, 'Rule 9', '', NULL, NULL);
 
 
--- language script for placename spellings
+-- language script for placename spellings 
+-- see ISO-639-2  language codes
 --
 CREATE TABLE IF NOT EXISTS script (
   id                           INT,                  -- ?? decide on authorized codes
   name                         VARCHAR(32) NOT NULL,
   lang                         VARCHAR(8),           -- language being written, typically
-  lang_subtype                 VARCHAR(8),           -- e.g. 'fr' for romanized as in French
+  dialect                      VARCHAR(8),           -- for example Cantonese specific chars
   note                         VARCHAR(512),
 
   PRIMARY KEY (id)
@@ -71,7 +73,7 @@ INSERT INTO script VALUES (11, 'Uighur', 'ug', '', NULL);
 INSERT INTO script VALUES (12, 'Tibetan', 'bo', '', NULL);
 INSERT INTO script VALUES (13, 'Arabic', 'ar', '', NULL);
 INSERT INTO script VALUES (14, 'Vietnamese', 'vi', '', NULL);
-INSERT INTO script VALUES (15, 'Malay', 'ms', '', NULL);        -- code 'ma' ?? from Lex
+INSERT INTO script VALUES (15, 'Manchu', 'mnc', '', NULL);     
 --INSERT INTO script VALUES (16, '', '', '', NULL);
 --INSERT INTO script VALUES (17, '', '', '', NULL);
 --INSERT INTO script VALUES (18, '', '', '', NULL);
@@ -84,7 +86,7 @@ CREATE TABLE IF NOT EXISTS trsys (
   id                           VARCHAR(10),      -- an abbreviation in lower case
   name                         VARCHAR(32),
   lang                         VARCHAR(8),       -- ISO 2 char code, with possible extension
-  dialect                      VARCHAR(32),
+  lang_subtype                 VARCHAR(32),      -- e.g. 'fr' for romanized as in French
   note                         VARCHAR(512),
 
   PRIMARY KEY (id)
@@ -109,14 +111,15 @@ INSERT INTO trsys VALUES ('rj', 'Romaji', 'ja', '', NULL);
 CREATE TABLE IF NOT EXISTS ftype (
   id                           INT AUTO_INCREMENT,  -- v4: hv_ft_id
 
-  name_vn                      VARCHAR(100),        -- v4: hv_ft_ch
-  name_alt                     VARCHAR(100),
-  name_tr                      VARCHAR(100),        -- v4: hv_ft_py
-  name_en                      VARCHAR(100),        -- v4: hv_ft_eng
+  name_vn                      VARCHAR(100),        -- v5 nm_trad
+  name_alt                     VARCHAR(100),        -- v5 nm_simp
+  name_tr                      VARCHAR(100),        -- v5 nm_py
+  name_en                      VARCHAR(100),        -- v5 nm_eng
 
+  period                       VARCHAR(64),         -- time period descriptions, disambiguates name_vn
   adl_class                    VARCHAR(64),         -- v4: adl_class
 
-  data_src                     VARCHAR(10),
+  cit_src                      VARCHAR(20),         -- groups the citations by origin
   citation                     VARCHAR(256),        -- prev: source
 
   note                         VARCHAR(512),        -- v4: note
@@ -128,8 +131,6 @@ CREATE TABLE IF NOT EXISTS ftype (
   added_on                     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  -- no auto update
 
   PRIMARY KEY  (id),
-  INDEX data_src_idx (data_src),
-    FOREIGN KEY (data_src)  REFERENCES dsrc(id)  ON DELETE SET NULL
 ) ENGINE = INNODB;
 
 -- special 'unknown' row
