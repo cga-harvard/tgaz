@@ -24,7 +24,7 @@ INSERT INTO data_src VALUES ('CBDB', 'China Biographical Database', '', 'http://
 -- data rules to show level of accuracy in ascribed dates in placenames
 --
 CREATE TABLE IF NOT EXISTS drule (
-  id                           INT,
+  id                           SMALLINT,
   name                         VARCHAR(32),
   rule                         VARCHAR(512),
 
@@ -46,7 +46,7 @@ INSERT INTO drule VALUES (7, 'Rule 7', '', NULL, NULL);
 INSERT INTO drule VALUES (9, 'Rule 9', '', NULL, NULL);
 
 
--- language script for placename spellings 
+-- language script for placename spellings
 -- see ISO-639-2  language codes
 --
 CREATE TABLE IF NOT EXISTS script (
@@ -74,7 +74,7 @@ INSERT INTO script VALUES (11, 'Uighur', 'ug', '', NULL);
 INSERT INTO script VALUES (12, 'Tibetan', 'bo', '', NULL);
 INSERT INTO script VALUES (13, 'Arabic', 'ar', '', NULL);
 INSERT INTO script VALUES (14, 'Vietnamese', 'vi', '', NULL);
-INSERT INTO script VALUES (15, 'Manchu', 'mnc', '', NULL);     
+INSERT INTO script VALUES (15, 'Manchu', 'mnc', '', NULL);
 --INSERT INTO script VALUES (16, '', '', '', NULL);
 --INSERT INTO script VALUES (17, '', '', '', NULL);
 --INSERT INTO script VALUES (18, '', '', '', NULL);
@@ -84,10 +84,10 @@ INSERT INTO script VALUES (15, 'Manchu', 'mnc', '', NULL);
 -- transcription systems for placename spellings
 --
 CREATE TABLE IF NOT EXISTS trsys (
-  id                           VARCHAR(10),      -- an abbreviation in lower case
-  name                         VARCHAR(32),
-  lang                         VARCHAR(8),       -- ISO 2 char code, with possible extension
-  lang_subtype                 VARCHAR(32),      -- e.g. 'fr' for romanized as in French
+  id                           VARCHAR(10),            -- an abbreviation in lower case
+  name                         VARCHAR(32) NOT NULL,
+  lang                         VARCHAR(8) NOT NULL,    -- ISO 2 char code, with possible extension
+  lang_subtype                 VARCHAR(32),            -- e.g. 'fr' for romanized as in French
   note                         VARCHAR(512),
 
   PRIMARY KEY (id)
@@ -110,7 +110,7 @@ INSERT INTO trsys VALUES ('rj', 'Romaji', 'ja', '', NULL);
 -- tranfer with:
 -- insert into ftype select id, name_ch, name_py, name_rm, adl_class, "CHGIS", NULL, note, NULL, NULL, NULL from ftype_xx;
 CREATE TABLE IF NOT EXISTS ftype (
-  id                           INT AUTO_INCREMENT,  -- v4: hv_ft_id
+  id                           INT AUTO_INCREMENT,
 
   name_vn                      VARCHAR(100),        -- v5 nm_trad
   name_alt                     VARCHAR(100),        -- v5 nm_simp
@@ -118,24 +118,23 @@ CREATE TABLE IF NOT EXISTS ftype (
   name_en                      VARCHAR(100),        -- v5 nm_eng
 
   period                       VARCHAR(64),         -- time period descriptions, disambiguates name_vn
-  adl_class                    VARCHAR(64),         -- v4: adl_class
+
+  adl_class                    VARCHAR(64),
 
   cit_src                      VARCHAR(20),         -- groups the citations by origin
   citation                     VARCHAR(256),        -- prev: source
 
-  note                         VARCHAR(512),        -- v4: note
+  note                         VARCHAR(512),
 
-  -- uri for recognized linked data vocabulary ?? more than one
-  -- ld_vocab                     VARCHAR(24),
-  ld_uri                       VARCHAR(1028),
+  ld_uri                       VARCHAR(1028),       -- uri for recognized linked data vocabulary
 
   added_on                     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  -- no auto update
 
-  PRIMARY KEY  (id),
+  PRIMARY KEY  (id)
 ) ENGINE = INNODB;
 
 -- special 'unknown' row
-INSERT INTO ftype VALUES (0, '未知', '未知', 'wei zhi', 'unknown', NULL, 'CHGIS', NULL, NULL);
+INSERT INTO ftype VALUES (0, '未知', '未知', 'wei zhi', 'unknown', NULL, NULL, 'CHGIS', NULL, NULL, NULL, NULL);
 -- id = 0 didn't work probably due to the auto_increment, gave id as 1120
 
 
