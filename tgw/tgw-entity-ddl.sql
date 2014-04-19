@@ -37,6 +37,7 @@ CREATE TABLE  IF NOT EXISTS placename (
   added_on              TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  -- no auto update
 
 PRIMARY KEY (id),
+INDEX pn_sysid_idx (sys_id),
 
 INDEX ftype_idx (ftype_id),
   FOREIGN KEY (ftype_id) REFERENCES ftype(id),
@@ -116,8 +117,8 @@ CREATE TABLE prec_by (
 
 -- relationship between placenames: "child is partof parent"
 -- consider placename - container terminology
-CREATE TABLE partof (
-  partof_id                    INT auto_increment,  -- prev: pot_id
+CREATE TABLE part_of (
+  id                           INT auto_increment,
   child_id                     INT NOT NULL,        -- prev: pot_child_id  vc12
   parent_id                    INT NOT NULL,        -- prev: pot_parent_id vc12
 
@@ -168,6 +169,46 @@ CREATE TABLE temporal_annotation (
     FOREIGN KEY (placename_id) REFERENCES placename(id),
   INDEX tan_rule_idx (rule_id),
     FOREIGN KEY (rule_id) REFERENCES drule(id)
+
+)ENGINE = INNODB;
+
+
+-- spatial
+
+-- well known text format
+-- this table cannot be so generalized due to the varying datatypes of the object
+-- solution:  create a different table for each type, in this case WKT
+--            this creates a problem for the system_ref table join ??
+CREATE TABLE wkt_definition (
+  id                      INT auto_increment,
+  placename_id            INT NOT NULL,
+  object_type             ENUM('point', 'polygon', 'linestring', 'multipoint', 'multilinestring',
+                                  'multipolygon', 'geometrycollection') NOT NULL,
+--  definition_type         ENUM('wkt') NOT NULL,        -- unnecessary ??
+
+  object_text_value          TEXT,        -- are there size issues?
+
+  PRIMARY KEY (id),
+  INDEX wktdef_pn_idx (placename_id),
+    FOREIGN KEY (placename_id) REFERENCES placename(id)
+
+)ENGINE = INNODB;
+
+
+-- external GIS citation, as in an index
+CREATE TABLE spatial_system_ref (
+  id                          INT auto_increment,
+  placename_id                INT NOT NULL,
+
+  system_name                 ENUM('Geohex', 'Watershed', 'Other') NOT NULL,
+  level                       INT,                           -- for geohex, only
+
+  location_uri                VARCHAR(1028),
+  location_id                 VARCHAR(100),                  -- ?? what is this  ??
+
+  PRIMARY KEY (id),
+  INDEX spsysref_pn_idx (placename_id),
+    FOREIGN KEY (placename_id) REFERENCES placename(id)
 
 )ENGINE = INNODB;
 

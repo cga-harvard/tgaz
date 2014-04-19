@@ -43,7 +43,9 @@ INSERT INTO drule VALUES (4, 'Rule 4', 'Year is specified, such as "13th Year of
 INSERT INTO drule VALUES (5, 'Rule 5', 'Season or Month is specified, such as "4th month of the Lunar year" or "autumn"', NULL, NULL);
 INSERT INTO drule VALUES (6, 'Rule 6', 'Date is specified, such as "jiachen day”', NULL, NULL);
 INSERT INTO drule VALUES (7, 'Rule 7', '', NULL, NULL);
+INSERT INTO drule VALUES (8, 'Rule 8', 'Used where assigned value was blank in CHGIS 3/5', NULL, NULL);
 INSERT INTO drule VALUES (9, 'Rule 9', '', NULL, NULL);
+INSERT INTO drule VALUES (0, 'Rule 0', '', NULL, NULL);
 
 
 -- language script for placename spellings
