@@ -1,0 +1,45 @@
+-- TGaz Data Load Processing
+-- 2014-04-22
+
+-- DO NOT RUN THE REFERENCED SQL FILES AS STAND-ALONE SCRIPTS
+
+
+-- The following steps must be done in order.  It is possible to
+--  turn off the foreign key constraints, but this is unlikely to
+--  end well.
+
+-- Create the TGAZ database in MySQL / MariaDb
+--   UTF-8 encoding with the corresponding character set
+--   The end product tables will be using the INNODB Engine as expressed in the DDL
+--   The intermediate load tables can use the devault MyISAM engine
+
+-- Create the end product tables in the following files using the mysql source command:
+--     tgw-lookup-ddl.sql
+--     tgw-entity-ddl.sql
+--   Additional tables, as needed:
+--     tgw-calc-ddl.sql
+--     tgw-fudan-ddl.sql
+
+-- The five "lookup" tables must be populated first
+-- The small tables "data_src", "script", "drule", "trsys" are populated in the DDL
+-- "ftype" (for feature types) is loaded from a source csv through an intermediate table "ftype_xx"
+--   using the commands in the file ftypes-load.sql.  Note that these commands will need
+--   adjusting to get the correct source file name, etc.  It is recommended to run each command 
+--   separately in the initial round. 
+-- "snote" (for source note) is handled similarly using the commands in the file snotes-load-sql.      
+
+
+-- Populate the "placename" table. 
+--  Load the data for the intermediate tables "main_xx" and "gis_xx" per the commands in
+--  the file placename-load.sql.  
+-- The command to insert into the spelling table is included.  
+-- The command to load the pres_loc table is included.  
+
+
+-- Populate the prec_by table.
+
+-- Populate the part_of table.
+
+
+
+

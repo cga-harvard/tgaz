@@ -85,12 +85,12 @@ CREATE TABLE spelling (
 
 -- present location and present jurisdiction notes
 -- the notion of 'present' is a relative one
-CREATE TABLE pres_loc (
+CREATE TABLE present_loc (
   id                           INT auto_increment,
   placename_id                 INT NOT NULL,
-  type                         ENUM('location', 'jurisdiction'),
-  country_code                 VARCHAR(8),
-  text_value                   VARCHAR(128),
+  type                         ENUM('location', 'jurisdiction') NOT NULL,
+  country_code                 VARCHAR(8) NOT NULL,
+  text_value                   VARCHAR(128) NOT NULL,
   source                       ENUM('Fudan', 'Google', 'Other') NOT NULL,
   attestation                  VARCHAR(512),
 
