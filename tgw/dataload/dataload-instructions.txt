@@ -37,9 +37,9 @@
 
 
 -- Populate the prec_by table.
-
+--   Use precby-load.sql
 -- Populate the part_of table.
-
+--   Use partof-load.sql
 
 
 
