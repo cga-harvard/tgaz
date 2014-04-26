@@ -1,130 +1,83 @@
 <?php
 
+/*
+ *   For increased efficiency, consider switching to prepared statements
+ *
+ */
 
+/*
+  placename:
+    'id'              'beg_yr'           'geo_src'
+    'sys_id'          'beg_rule_id'      'added_on'
+    'ftype_id'        'end_yr'           'ftype_vn'
+    'data_src'        'end_rule_id'      'ftype_alt'
+    'data_src_ref'    'obj_type'         'ftype_tr'
+    'snote_id'        'xy_type'          'ftype_en'
+    'alt_of_id'       'x_coord'          'snote_ref'
+    'lev_rank'        'y_coord'          'snote_text'
+
+  spellings:
+     'id'              'exonym_lang'     'note'
+     'placename_id'    'trsys_id'        'script'
+     'script_id'       'attested_by'     'trsys'
+     'written_form'
+
+  partofs:
+     'id'              'begin_year'      'parent_sys_id'
+     'child_id'        'end_year'        'parent_vn'
+     'parent_id'                         'parent_tr'
+
+*/
 function get_placename($conn, $fmt, $sys_id) {
 
+  tlog(E_NOTICE, "Getting placename: " . $sys_id . " in format " . $fmt);
+
   $pn_query = "SELECT * FROM v_placename WHERE sys_id = '$sys_id';";
-#  $sp_query = "SELECT * FROM spelling WHERE placename_id = '$id';";
-
-  $pn_result = mysqli_query($conn, $pn_query) or die("<br />Error: " . mysqli_error());
-
-  $pn_row = mysqli_fetch_row($pn_result);
-  $pn = array(
-    'id'              => $pn_row[0],              // Make this an assoc array ?
-    'sys_id'          => $pn_row[1],
-    'ftype_id'        => $pn_row[2],
-    'data_src'        => $pn_row[3],
-    'data_src_ref'    => $pn_row[4],
-    'snote_id'        => $pn_row[5],
-    'alt_of_id'       => $pn_row[6],
-    'lev_rank'        => $pn_row[7],
-    'beg_yr'          => $pn_row[8],
-    'beg_rule'        => $pn_row[9],
-    'end_yr'          => $pn_row[10],
-    'end_rule'        => $pn_row[11],
-    'obj_type'        => $pn_row[12],             #| enum('POINT','POLYGON','LINE','ENTITY')
-    'xy_type'         => $pn_row[13],             #| enum('centroid','point','midpoint','point location','N/A')
-    'x_coord'         => $pn_row[14],
-    'y_coord'         => $pn_row[15],
-    'geo_src'         => $pn_row[16],
-    'added_on'        => $pn_row[17],
-    'ftype_vn'        => $pn_row[18],
-    'ftype_alt'       => $pn_row[19],
-    'ftype_tr'        => $pn_row[20],
-    'ftype_en'        => $pn_row[21],
-    'snote_ref'       => $pn_row[22],
-    'snote_text'      => $pn_row[23]
-  );
-
-//  echo "<p> $row[0]</p> <p>" . $pn['id'] . "</p>";
+  $pn_result = mysqli_query($conn, $pn_query) or die("<br />Error: " . mysqli_error());   //FIX ME
+  $pn = mysqli_fetch_array($pn_result, MYSQLI_ASSOC);
   mysqli_free_result($pn_result);
-//  echo "<p> $row[0]</p> <p>" . $pn['id'] . "</p>";
 
-  $spellings = get_spellings($conn, $pn['id']);
+  $spellings = get_deps($conn, "SELECT * FROM v_spelling WHERE placename_id = " . $pn['id'] . ";");
+  $partofs = get_deps($conn, "SELECT * FROM v_partof WHERE child_id = " . $pn['id'] . " ORDER BY begin_year;");
+//  $precbys = get_deps($conn, "SELECT * FROM v_precby WHERE placename_id = " . $pn_id . ";");  // ORDER BY ??
 
-  $partofs = get_partofs($conn, $pn['id']);
-echo "<p>count of partofs array: " . count($partofs) . "</p>" ;
+   // BETTER: use these methods in the to_xx call's parameter list to avoid unneeded work
 
-  if ($fmt == "json") {
-    to_json($pn, $spellings, $partofs);
+  switch($fmt) {
+    case 'json':
+      to_json($pn, $spellings, $partofs); break;
+    case 'xml':
+      to_xml($pn, $spellings, $partofs); break;
+    case 'rdf':
+      to_pelagios_rdf($pn, $spellings); break;
+    default:
+      tlog(E_WARNING, "Invalid fmt type: " . $fmt);
   }
-
 }
 
-function get_spellings($conn, $pn_id) {
-  #echo "pn_id: " . $pn_id;
-  $sp_query = "SELECT * FROM v_spelling WHERE placename_id = " . $pn_id . ";";   // replace with prepared statement ??
+function get_deps($conn, $query) {
 
-#  $sp_result = mysqli_query($conn, $pn_query) or die("<br />Error: " . mysqli_error());
-
-  $spellings = array();  // indexed array of associative arrays for the rows
-
-  if ($sp_result = mysqli_query($conn, $sp_query)) {
-
-    while ($sp_row = mysqli_fetch_row($sp_result)) {
-      $spellings[] = array(
-          #'id'              =>   $sp_row[0],      //don't need these
-          #'placename_id'    =>   $sp_row[1],
-          'script_id'        =>   $sp_row[2],
-          'written_form'     =>   $sp_row[3],
-          'exonym_lang'      =>   $sp_row[4],
-          'trsys_id'         =>   $sp_row[5],
-          'attested_by'      =>   $sp_row[6],
-          'note'             =>   $sp_row[7],
-          'script'           =>   $sp_row[8],
-          'trsys'            =>   $sp_row[9]
-        );
-    }
-
-    mysqli_free_result($sp_result);
-  }  // else error
-  return $spellings;
-}
-
-//not used for pelagios
-function get_partofs($conn, $pn_id) {
-echo "<p>pn_id: " . $pn_id . "</p>";
-
-  $query = "SELECT * FROM v_partof WHERE child_id = " . $pn_id . " ORDER BY begin_year;";   // replace with prepared statement ??
-
-  $partofs = array();
+  $deps = array();  //indexed
 
   if ($result = mysqli_query($conn, $query)) {
-    while ($row = mysqli_fetch_row($result)) {
-      $partofs[] = array(
-          #'id'              =>   $row[0],      //don't need this
-          'child_id'         =>   $row[1],
-          'parent_id'        =>   $row[2],
-          'begin_year'       =>   $row[3],
-          'end_year'         =>   $row[4],
-          'parent_sys_id'    =>   $row[5],
-          'parent_vn'        =>   $row[6],
-          'parent_tr'        =>   $row[7]
-      );
+    while ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
+      $deps[] = $row;
     }
 
     mysqli_free_result($result);
   }  // else error
 
-  return $partofs;   ;
+  return $deps;
 }
 
-/*
-function get_precbys($conn, $pn_id) {  //not used for pelagios
-
-  $query = "SELECT * FROM v_precby WHERE placename_id = " . $pn_id . ";";   // replace with prepared statement ??
-
-}
-*/
-
-function to_json($pn, $spellings, $partofs) { // , $precby, $partof) {
+function to_json($pn, $spellings, $partofs) { // , $precbys) {
 
     $sp_json = array();  //indexed
     foreach ($spellings as $sp) {
         if ($sp['script_id'] != 0) {                      // has script
             $sp_json[] = array(
                 $sp['script']     =>  $sp['written_form'],
-                'exonym language' =>  $sp['exonym_lang'],
+                'exonym language' =>  $sp['exonym_lang'],    // FIXME test for null to exclude
                 'attested by'     =>  $sp['attested_by'],
                 'note'            =>  $sp['note']
             );
@@ -148,7 +101,7 @@ function to_json($pn, $spellings, $partofs) { // , $precby, $partof) {
     }
 
     $pn_json = array(
-      'system'              => 'CHGIS, Harvard University',
+      'system'              => 'China Historical GIS, Harvard University and Fudan University',
       'license'             => 'c. 2014',
       'uri'                 => 'http://chgis.harvard.edu/placename/' . $pn['sys_id'],
       'sys_id'              => $pn['sys_id'],
@@ -165,14 +118,14 @@ function to_json($pn, $spellings, $partofs) { // , $precby, $partof) {
 
       'temporal' => array(
         'years' => $pn['beg_yr'] . " - " . $pn['end_yr'],
-        'begin/end_rules' => $pn['beg_rule'] . " / " . $pn['end_rule']
+        'begin/end_rules' => $pn['beg_rule_id'] . " - " . $pn['end_rule_id']
       ),
 
       'spatial' => array(
         'object_type' => $pn['obj_type'],
         'xy_type'     => $pn['xy_type'],
-        'longitude'   => $pn['x_coord'],
         'latitude'    => $pn['y_coord'],
+        'longitude'   => $pn['x_coord'],
         'source'      => $pn['geo_src']
       ),
 
@@ -180,23 +133,81 @@ function to_json($pn, $spellings, $partofs) { // , $precby, $partof) {
          'part of' => $po_json
       ),
 
-      'data source'   => $pn['data_src']  //,
-      //'source note'   => $pn['snote_text']
+      'data source'   => $pn['data_src'],
+      'source note'   => $pn['snote_text']
   );
 
+  header('Content-Type: text/json; charset=utf-8');
   echo json_encode($pn_json, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT );
-
-  return;
 }
 
 
-/*
-final function to_xml {
+
+function to_xml($pn, $spellings, $partofs) {
+  header('Content-Type: text/xml; charset=utf-8');
+  echo  "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
+  // DOCTYPE published ??
+
+  echo '<placename id="' . $pn['id'] . '">';
+  echo '  <system>China Historical GIS, Harvard University and Fudan University</system>';
+  echo '  <license>c. 2014</license>';
+
+  echo '  <uri>http://chgis.harvard.edu/placename/' . $pn['sys_id'] . '</uri>';
+
+  echo ' <spellings>';
+  foreach($spellings as $sp) {
+    echo '    <spelling>';
+    if ($sp['script_id'] != 0) {                      // has script
+      echo '      <written-form script="' . $sp['script'] . '">' . $sp['written_form'] . '</written-form>';
+    } elseif ($sp['trsys_id'] != 'na') {              // is transcription
+      echo '      <transcription system="' . $sp['trsys'] . '">'  .$sp['written_form'] . '</transcription>';
+    }
+      echo '      <exonym-lang>' . $sp['exonym_lang']  . '</exonym-lang>';
+      echo '      <attested-by>' . $sp['attested_by'] . '</attested-by>';
+      echo '      <note>' . $sp['note'] . '</note>';
+
+    echo '    </spelling>';
+  }
+  echo '  </spellings>';
+
+  echo '  <feature-type>';
+  echo '    <name>' . $pn['ftype_vn'] . '</name>';
+  echo '    <alternate-name>' . $pn['ftype_alt'] . '</alternate-name>';
+  echo '    <transcription>' . $pn['ftype_tr'] . '</transcription>';
+  echo '    <translation lang="en">' . $pn['ftype_en'] . '</translation>';
+  echo '  </feature-type>';
+
+  echo '  <temporal>';
+  echo '    <years begin-rule="' . $pn['beg_rule_id'] . '" end-rule="' . $pn['end_rule_id'] . '">' . $pn['beg_yr'] . ' - ' . $pn['end_yr'] . '</years>';
+  echo '  </temporal>';
+
+  echo '  <spatial>';
+  echo '  <object-type>' . $pn['obj_type'] . '</object-type>';
+  echo '  <coordinate-type>' . $pn['xy_type'] . '</coordinate-type>';
+  echo '  <latitude-direction></latitude-direction>';                     //FIXME - calc N / S
+  echo '  <degrees-latitude>' . $pn['y_coord'] . '</degrees-latitude>';
+  echo '  <longitude-direction></longitude-direction>';                   //FIXME - calc E / W
+  echo '  <degrees-longitude>' . $pn['x_coord'] . '</degrees-longitude>';
+  echo '  <geo-source>' . $pn['geo_src'] . '</geo-source>';
+  echo '  </spatial>';
+
+  echo '  <historical-context>';
+  echo '    <part-of-relationships>';
+    foreach ($partofs as $po) {
+      echo '      <part-of parent-id="' . $po['parent_sys_id'] . '" from="' . $po['begin_year'] . '" to="' . $po['end_year'] . '" >';
+      echo '        <parent-name>' . $po['parent_vn'] . '</parent-name>';
+      echo '        <transcribed-name>' . $po['parent_tr'] . '</transcribed-name>';
+      echo '      </part-of>';
+    }
+  echo '    </part-of-relationships>';
+  echo '  </historical-context>';
+
+  echo '</placename>';
 
 }
 
-final function to_pelagios_rdf {
+function to_pelagios_rdf($pn, $spellings) {
 
 }
-*/
+
 ?>

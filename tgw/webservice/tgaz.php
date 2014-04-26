@@ -5,7 +5,8 @@ require ("./tgaz-lib.php");
 require ("./placename.php");
 #require ("./featuretype.php");
 
-echo  "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"; // otherwise wrong encoding despite character set
+/*echo  "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"; // otherwise wrong encoding despite character set
+*/
 
 $conn = mysqli_connect("$db_addr", "$db_user", "$db_pass", "$db_name", "$db_port");
 
@@ -13,19 +14,19 @@ if (!$conn) {
     die('Connect Error (' . mysqli_connect_errno() . ') ' . mysqli_connect_error());
 }
 
-echo 'Success..... ' . mysqli_get_host_info($conn);
-echo "<br />Charset... " . mysqli_get_charset($conn)->charset;
-
-
-
+//echo 'Success..... ' . mysqli_get_host_info($conn);
+//echo "<br />Charset... " . mysqli_get_charset($conn)->charset;
 
 // parsing of the uri
 
 $requrl = "$_SERVER[REQUEST_URI]" ;  // e.g. /placename.php?fmt=json&id=hvd_34376
 $url_path = parse_url( $requrl, PHP_URL_PATH);
-echo "<br /> $requrl :: $url_path";
+//echo "<br /> $requrl :: $url_path";
 
-
+//use "explode" to parse
+// e.g.: $request_parts = explode('/', $_GET['url']);
+// or:           $parts = explode('/', $_SERVER['REQUEST_URI']);
+//
 
 // regex parse:  api\/['placename'|'featuretype']\/['json'|'xml]\/(w+)
 
@@ -37,7 +38,7 @@ $obj_type = "placename";
 $id=$_GET["id"];
 
 if (!($id ))  {
-  echo("<p>Id not in request.</p>");
+  tlog(E_ERROR, "Id not in request.");
   mysqli_close($conn);
   exit();
 }
@@ -47,7 +48,7 @@ if (!($fmt ))  {  // test for one of:  xml, geojson, json, http?
   $fmt = "json";
 }
 
-echo "<br />param obj_type: >>'$obj_type'<<  eparam id: >>'$id'<<  param fmt: >>$fmt<<";
+//echo "<br />param obj_type: >>'$obj_type'<<  eparam id: >>'$id'<<  param fmt: >>$fmt<<";
 
 
 
@@ -58,8 +59,7 @@ if ($obj_type == "placename") {
 } else if ($obj_type == "featuretype") {
   ;
 } else  {
-  ;
-  echo("<p>Unknown object type : $obj_type</p>");
+  tlog(E_ERROR, "Unknown object type : " . $obj_type);
 }
 
 mysqli_close($conn);
