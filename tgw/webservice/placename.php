@@ -16,6 +16,11 @@
     'alt_of_id'       'x_coord'          'snote_ref'
     'lev_rank'        'y_coord'          'snote_text'
 
+      plus values calculated here
+    'self_uri'
+    'sp_script_form' - written form for preferred script, e.g. simplified Chinese over traditional
+    'sp_transcribed_form' - transcribed form for preferred system, e.g. Pinyin over WadeGiles
+
   spellings:
      'id'              'exonym_lang'     'note'
      'placename_id'    'trsys_id'        'script'
@@ -27,6 +32,15 @@
      'child_id'        'end_year'        'parent_vn'
      'parent_id'                         'parent_tr'
 
+  precbys:
+     'id'
+
+
+  preslocs:
+     'id'               'type'            'text_value'
+     'placename_id'     'country_code'    'source'
+                                          'attestation'
+
 */
 function get_placename($conn, $fmt, $sys_id) {
 
@@ -37,15 +51,36 @@ function get_placename($conn, $fmt, $sys_id) {
   $pn = mysqli_fetch_array($pn_result, MYSQLI_ASSOC);
   mysqli_free_result($pn_result);
 
+  $pn['self_uri'] = 'http://chgis.harvard.edu/placename/' . $pn['sys_id'];
+
   $spellings = get_deps($conn, "SELECT * FROM v_spelling WHERE placename_id = " . $pn['id'] . ";");
+
+  //calculate preferred written forms
+  foreach ($spellings as $sp) {
+    if ($sp['script_id'] != 0) {                      // has script
+      if (isset($pn['sp_script_form']) || ($sp['script_id'] == 2)) {   //simplified Chinese
+        $pn['sp_script_form']  = $sp['written_form'];
+      }
+    } elseif ($sp['trsys_id'] != 'na') {              // is transcription
+      $pn['sp_transcribed_form'] = $sp['written_form'];
+    }
+  }
+
   $partofs = get_deps($conn, "SELECT * FROM v_partof WHERE child_id = " . $pn['id'] . " ORDER BY begin_year;");
 //  $precbys = get_deps($conn, "SELECT * FROM v_precby WHERE placename_id = " . $pn_id . ";");  // ORDER BY ??
+
+  $preslocs = get_deps($conn, "SELECT * FROM present_loc WHERE placename_id = " . $pn['id'] . " AND type = 'location';");
+// FIXME extract one preferred location
 
    // BETTER: use these methods in the to_xx call's parameter list to avoid unneeded work
 
   switch($fmt) {
     case 'json':
-      to_json($pn, $spellings, $partofs); break;
+      to_json($pn, $spellings, $partofs, $preslocs); break;
+    case 'geojson':
+      to_geojson($pn, $spellings); break;
+    case 'html5':
+      to_html5($pn, $spellings); break;
     case 'xml':
       to_xml($pn, $spellings, $partofs); break;
     case 'rdf':
@@ -54,6 +89,7 @@ function get_placename($conn, $fmt, $sys_id) {
       tlog(E_WARNING, "Invalid fmt type: " . $fmt);
   }
 }
+
 
 function get_deps($conn, $query) {
 
@@ -70,7 +106,7 @@ function get_deps($conn, $query) {
   return $deps;
 }
 
-function to_json($pn, $spellings, $partofs) { // , $precbys) {
+function to_json($pn, $spellings, $partofs, $preslocs) { // , $precbys) {
 
     $sp_json = array();  //indexed
     foreach ($spellings as $sp) {
@@ -100,6 +136,16 @@ function to_json($pn, $spellings, $partofs) { // , $precbys) {
         );
     }
 
+    $ploc_json = array();  //indexed
+    foreach ($preslocs as $ploc) {
+        $ploc_json[] = array(
+           'country code'         => $ploc['country_code'],
+           'text'                 => $ploc['text_value'],
+           'source'               => $ploc['source'],
+           'attestation'          => $ploc['attestation']
+        );
+    }
+
     $pn_json = array(
       'system'              => 'China Historical GIS, Harvard University and Fudan University',
       'license'             => 'c. 2014',
@@ -126,24 +172,58 @@ function to_json($pn, $spellings, $partofs) { // , $precbys) {
         'xy_type'     => $pn['xy_type'],
         'latitude'    => $pn['y_coord'],
         'longitude'   => $pn['x_coord'],
-        'source'      => $pn['geo_src']
+        'source'      => $pn['geo_src'],
+        'present_location' => $ploc_json
+        //present_jurisdiction
       ),
 
       'historical context' => array(
          'part of' => $po_json
       ),
 
+
       'data source'   => $pn['data_src'],
       'source note'   => $pn['snote_text']
   );
 
   header('Content-Type: text/json; charset=utf-8');
-  echo json_encode($pn_json, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT );
+  echo json_encode($pn_json, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT );
 }
 
+// file format the same for one or multiples - array of one or many
+//
+function to_geojson($pn, $spellings) {
 
+  $geo_types = array( 'POINT' => 'Point', 'POLYGON' => 'Polygon', 'LINE' => 'LineString');
 
-function to_xml($pn, $spellings, $partofs) {
+  $pn_json = array(
+      'type'                => 'FeatureCollection',
+      'features'            =>  array(               // indexed, container for multiples
+                                array(
+        'type'              => 'Feature',
+        'geometry'          => array(
+          'type'            =>  $geo_types[$pn['obj_type']],             // FIXME - or xy_type?
+          'coordinates'     =>  array ($pn['y_coord'], $pn['x_coord']), // FIXME - polygon or line data ?
+         ),
+         'properties'       => array(
+           'uri'            => 'http://chgis.harvard.edu/placename/' . $pn['sys_id'],
+           'sys_id'         => $pn['sys_id'],
+
+           //   'spellings'
+           'script name'      =>  $pn['sp_script_form'],
+           'transcribed name' => $pn['sp_transcribed_form'],
+
+           'feature type'     => $pn['ftype_en'],
+           'years'            => $pn['beg_yr'] . ' - ' . $pn['end_yr']
+         )
+      ))
+  );
+
+  header('Content-Type: text/json; charset=utf-8');
+  echo json_encode($pn_json, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT );
+}
+
+function to_xml($pn, $spellings, $partofs, $preslocs) {
   header('Content-Type: text/xml; charset=utf-8');
   echo  "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
   // DOCTYPE published ??
@@ -182,13 +262,20 @@ function to_xml($pn, $spellings, $partofs) {
   echo '  </temporal>';
 
   echo '  <spatial>';
-  echo '  <object-type>' . $pn['obj_type'] . '</object-type>';
-  echo '  <coordinate-type>' . $pn['xy_type'] . '</coordinate-type>';
-  echo '  <latitude-direction></latitude-direction>';                     //FIXME - calc N / S
-  echo '  <degrees-latitude>' . $pn['y_coord'] . '</degrees-latitude>';
-  echo '  <longitude-direction></longitude-direction>';                   //FIXME - calc E / W
-  echo '  <degrees-longitude>' . $pn['x_coord'] . '</degrees-longitude>';
-  echo '  <geo-source>' . $pn['geo_src'] . '</geo-source>';
+  echo '    <object-type>' . $pn['obj_type'] . '</object-type>';
+  echo '    <coordinate-type>' . $pn['xy_type'] . '</coordinate-type>';
+  echo '    <latitude-direction>N</latitude-direction>';                     //FIXME - calc N / S
+  echo '    <degrees-latitude>' . $pn['y_coord'] . '</degrees-latitude>';
+  echo '    <longitude-direction>E</longitude-direction>';                   //FIXME - calc E / W
+  echo '    <degrees-longitude>' . $pn['x_coord'] . '</degrees-longitude>';
+  echo '    <geo-source>' . $pn['geo_src'] . '</geo-source>';
+
+  echo '    <present-location>';
+//  foreach($preslocs as $ploc) {
+
+//  }
+  echo '    </present-location>';
+
   echo '  </spatial>';
 
   echo '  <historical-context>';
@@ -202,12 +289,50 @@ function to_xml($pn, $spellings, $partofs) {
   echo '    </part-of-relationships>';
   echo '  </historical-context>';
 
+  echo '  <data-source>' . $pn['data_src'] . '</data-source>';
+
+  echo '  <source-note>';
+  echo '    <![CDATA[';
+  echo '      ' . $pn['snote_text'];
+  echo '    ]]>';
+  echo '  </source-note>';
+
   echo '</placename>';
 
 }
 
+// refactor to accept array of pn since the format is the same
 function to_pelagios_rdf($pn, $spellings) {
+  header('Content-Type: text/turtle; charset=utf-8');
 
+  echo "@prefix dcterms: <http://purl.org/dc/terms/> .\n";
+  echo "@prefix osgeo: <http://data.ordnancesurvey.co.uk/ontology/geometry/> .\n";
+  echo "@prefix pelagios: <http://pelagios.github.io/vocab/terms#> .\n";
+  echo "@prefix pleiades: <http://pleiades.stoa.org/places/vocab#> .\n";
+  echo "@prefix geo: <http://www.w3.org/2003/01/geo/wgs84_pos#> .\n";
+  echo "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n";
+  echo "@prefix skos: <http://www.w3.org/2004/02/skos/core#> .\n";
+  echo "@prefix spatial: <http://geovocab.org/spatial#> .\n";
+  echo "@prefix foaf: <http://xmlns.com/foaf/0.1/> .\n";
+
+// foreach in $pnarray
+
+  echo "<" . $pn['self_uri'] . "> a pelagios:PlaceRecord ;\n";
+    echo "  dcterms:title \"" . $pn['sp_transcribed_form'] . "\" ;\n";                              //FIXME case where transcribed form is missing
+    echo "  dcterms:description \"" . $pn['ftype_en'] . " in the jurisdiction of " . "\" ;\n";      // ftype + parent?? which one and what if none?
+    echo "  dcterms:subject <http://????> ;\n";                                                     //  FIXME - uri for feature type; also chgis?
+    echo "  skos:closeMatch <http://sws.geonames.org/" . "????" . "/> ;\n";                           // FIXME ?? in links?
+
+    foreach($spellings as $sp) {
+      echo "  pleiades:hasName [ rdfs:label \"" . $sp['written_form'] . "\" ] ;\n";
+    }
+
+    echo "  pleiades:hasLocation [ geo:lat \"" . $pn['y_coord'] . "\"^^xsd:double ; geo:long \"" . $pn['x_coord'] . "\"^^xsd:double ] ;\n";
+    // FIXME 'spatial:P' is now missing from online version ?? ask Rainer
+
+    //multiples here, no container; iterate through list of pn's
 }
+
+//function to_html5($pn, $spellings, $partofs) {
 
 ?>
