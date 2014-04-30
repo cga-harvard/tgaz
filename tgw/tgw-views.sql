@@ -19,3 +19,11 @@ AND sp_tr.trsys_id != 'na'
 AND sp_vn.script_id in (2, 4, 7, 10, 11, 12, 13, 14);
 
 -- need better way to find a single vernacular name for a place
+
+CREATE VIEW v_precby AS
+SELECT pb.*, pn.sys_id parent_sys_id, sp_vn.written_form pb_vn, sp_tr.written_form pb_tr
+FROM prec_by pb, placename pn, spelling sp_vn, spelling sp_tr
+WHERE pb.prec_id = pn.id
+AND sp_vn.placename_id = pn.id AND sp_tr.placename_id = pn.id
+AND sp_tr.trsys_id != 'na'
+AND sp_vn.script_id in (2, 4, 7, 10, 11, 12, 13, 14);

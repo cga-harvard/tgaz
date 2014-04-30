@@ -58,7 +58,7 @@ function get_placename($conn, $fmt, $sys_id) {
   //calculate preferred written forms
   foreach ($spellings as $sp) {
     if ($sp['script_id'] != 0) {                      // has script
-      if (isset($pn['sp_script_form']) || ($sp['script_id'] == 2)) {   //simplified Chinese
+      if (!isset($pn['sp_script_form']) || ($sp['script_id'] == 2)) {   //simplified Chinese
         $pn['sp_script_form']  = $sp['written_form'];
       }
     } elseif ($sp['trsys_id'] != 'na') {              // is transcription
@@ -67,8 +67,7 @@ function get_placename($conn, $fmt, $sys_id) {
   }
 
   $partofs = get_deps($conn, "SELECT * FROM v_partof WHERE child_id = " . $pn['id'] . " ORDER BY begin_year;");
-//  $precbys = get_deps($conn, "SELECT * FROM v_precby WHERE placename_id = " . $pn_id . ";");  // ORDER BY ??
-
+  $precbys = get_deps($conn, "SELECT * FROM v_precby WHERE placename_id = " . $pn['id'] . ";");
   $preslocs = get_deps($conn, "SELECT * FROM present_loc WHERE placename_id = " . $pn['id'] . " AND type = 'location';");
 // FIXME extract one preferred location
 
@@ -76,11 +75,11 @@ function get_placename($conn, $fmt, $sys_id) {
 
   switch($fmt) {
     case 'json':
-      to_json($pn, $spellings, $partofs, $preslocs); break;
+      to_json($pn, $spellings, $partofs, $precbys, $preslocs); break;
     case 'geojson':
       to_geojson($pn, $spellings); break;
-    case 'html5':
-      to_html5($pn, $spellings); break;
+//    case 'html5':
+//      to_html5($pn, $spellings); break;
     case 'xml':
       to_xml($pn, $spellings, $partofs); break;
     case 'rdf':
@@ -106,7 +105,7 @@ function get_deps($conn, $query) {
   return $deps;
 }
 
-function to_json($pn, $spellings, $partofs, $preslocs) { // , $precbys) {
+function to_json($pn, $spellings, $partofs, $precbys, $preslocs) {
 
     $sp_json = array();  //indexed
     foreach ($spellings as $sp) {
@@ -133,6 +132,15 @@ function to_json($pn, $spellings, $partofs, $preslocs) { // , $precbys) {
           'parent id'             => $po['parent_sys_id'],
           'name'                  => $po['parent_vn'],
           'transcribed'           => $po['parent_tr']
+        );
+    }
+
+    $pb_json = array();  //indexed
+    foreach ($precbys as $pb) {
+        $pb_json[] = array(
+          'preceded by id'             => $pb['pb_sys_id'],
+          'name'                  => $pb['pb_vn'],
+          'transcribed'           => $pb['pb_tr']
         );
     }
 
@@ -178,7 +186,8 @@ function to_json($pn, $spellings, $partofs, $preslocs) { // , $precbys) {
       ),
 
       'historical context' => array(
-         'part of' => $po_json
+         'part of'      => $po_json,
+         'preceded by'  => $pb_json
       ),
 
 
