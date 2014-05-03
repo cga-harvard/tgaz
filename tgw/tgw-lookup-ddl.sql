@@ -54,32 +54,33 @@ INSERT INTO drule VALUES (0, 'Rule 0', '', NULL, NULL);
 CREATE TABLE IF NOT EXISTS script (
   id                           INT,                  -- ?? decide on authorized codes
   name                         VARCHAR(32) NOT NULL,
-  lang                         VARCHAR(8),           -- language being written, typically
+  lang                         VARCHAR(8) NOT NULL,  -- language being written, typically
   dialect                      VARCHAR(8),           -- for example Cantonese specific chars
+  pref_per_lang                SMALLINT NOT NULL,    -- 0/1 boolean, allows determination of default spelling
   note                         VARCHAR(512),
 
   PRIMARY KEY (id)
 ) ENGINE = INNODB;
 
-INSERT INTO script VALUES (0, 'n/a', 'xx', '', NULL);
-INSERT INTO script VALUES (1, 'traditional Chinese', 'zh', '', NULL);
-INSERT INTO script VALUES (2, 'simplified Chinese', 'zh', '', NULL);
-INSERT INTO script VALUES (3, 'variant Chinese', 'zh', '', NULL);
-INSERT INTO script VALUES (4, 'Kanji', 'ja', '', NULL);
-INSERT INTO script VALUES (5, 'Hirigana', 'ja', '', NULL);
-INSERT INTO script VALUES (6, 'Katakana', 'ja', '', NULL);
-INSERT INTO script VALUES (7, 'Korean characters', 'ko', '', NULL);
-INSERT INTO script VALUES (8, 'Hangul', 'ko', '', NULL);
-INSERT INTO script VALUES (9, 'Cyrillic', 'ru', '', NULL);
-INSERT INTO script VALUES (10, 'Mongolian', 'mn', '', NULL);
-INSERT INTO script VALUES (11, 'Uighur', 'ug', '', NULL);
-INSERT INTO script VALUES (12, 'Tibetan', 'bo', '', NULL);
-INSERT INTO script VALUES (13, 'Arabic', 'ar', '', NULL);
-INSERT INTO script VALUES (14, 'Vietnamese', 'vi', '', NULL);
-INSERT INTO script VALUES (15, 'Manchu', 'mnc', '', NULL);
---INSERT INTO script VALUES (16, '', '', '', NULL);
---INSERT INTO script VALUES (17, '', '', '', NULL);
---INSERT INTO script VALUES (18, '', '', '', NULL);
+INSERT INTO script VALUES (0, 'n/a', 'xx', '', 0, NULL);
+INSERT INTO script VALUES (1, 'traditional Chinese', 'zh', '', 0, NULL);
+INSERT INTO script VALUES (2, 'simplified Chinese', 'zh', '', 1, NULL);
+INSERT INTO script VALUES (3, 'variant Chinese', 'zh', '', 0, NULL);
+INSERT INTO script VALUES (4, 'Kanji', 'ja', '', 1, NULL);
+INSERT INTO script VALUES (5, 'Hirigana', 'ja', '', 0, NULL);
+INSERT INTO script VALUES (6, 'Katakana', 'ja', '', 0, NULL);
+INSERT INTO script VALUES (7, 'Korean characters', 'ko', '', 1, NULL);
+INSERT INTO script VALUES (8, 'Hangul', 'ko', '', 0, NULL);
+INSERT INTO script VALUES (9, 'Cyrillic', 'ru', '', 1, NULL);
+INSERT INTO script VALUES (10, 'Mongolian', 'mn', '', 1, NULL);
+INSERT INTO script VALUES (11, 'Uighur', 'ug', '', 1, NULL);
+INSERT INTO script VALUES (12, 'Tibetan', 'bo', '', 1, NULL);
+INSERT INTO script VALUES (13, 'Arabic', 'ar', '', 1, NULL);
+INSERT INTO script VALUES (14, 'Vietnamese', 'vi', '', 1, NULL);
+INSERT INTO script VALUES (15, 'Manchu', 'mnc', '', 1, NULL);
+--INSERT INTO script VALUES (16, '', '', '', 1, NULL);
+--INSERT INTO script VALUES (17, '', '', '', 1, NULL);
+--INSERT INTO script VALUES (18, '', '', '', 1, NULL);
 
 
 

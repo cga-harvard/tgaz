@@ -5,6 +5,7 @@ require ("./tgaz-lib.php");
 require ("./placename.php");
 #require ("./featuretype.php");
 require ("./service-info.php");
+require ("./search.php");
 
 
 $conn = mysqli_connect("$db_addr", "$db_user", "$db_pass", "$db_name", "$db_port");
@@ -28,6 +29,8 @@ $url_path = parse_url( $requrl, PHP_URL_PATH);
 //
 
 $path_parts = explode('/', $url_path);
+//FIXME check for required elements
+
 $service = $path_parts[2];
 
 //foreach ($path_parts as $part) {
@@ -38,6 +41,7 @@ $service = $path_parts[2];
 // regex parse:  api\/['placename'|'featuretype']\/['json'|'xml]\/(w+)
 
 // for now pretend that the url will come in as:  /api/placename/:fmt/:id
+
 
 if (false) {
 
@@ -52,20 +56,30 @@ if (false) {
     // first try for fmt in path_part[3]
     // id in part[4]
 
-    $id=$_GET["id"];
-
-    if (!($id ))  {
-      tlog(E_ERROR, "Id not in request.");
-      mysqli_close($conn);
-      exit();
-    }
-
     $fmt=$_GET["fmt"];
     if (!($fmt ))  {  // test for one of:  xml, geojson, json, http?
       $fmt = "json";
     }
 
-    get_placename($conn, $fmt, $id);
+    if (isset($path_parts[3])) { // and matches /hvd_\d+/
+      get_placename($conn, $fmt, $path_parts[3]);
+    } else {
+
+//    $id=$_GET["id"];
+
+      if ($id=$_GET["id"])  {
+        get_placename($conn, $fmt, $id);
+
+      } elseif ($namekey = $_GET["n"]) {
+        search_placename($conn, $namekey);  //, null);
+      } else {
+        tlog(E_ERROR, "Id or Name not in request.");
+        mysqli_close($conn);
+        exit();
+      }
+    }
+
+//    get_placename($conn, $fmt, $id);
   } else if ($service == "featuretype") {
     ;
   } else  {
