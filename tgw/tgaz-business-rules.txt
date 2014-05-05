@@ -32,3 +32,9 @@ For transcription system (trsys):
 
 6.1   When spelling is a transcription, use special trsys.id "na" for "not applicable"
       This allows NOT NULL constraint and easier querying.
+
+For present location/jurisdiction (resent_loc):
+
+7.1   Zero or one of type 'location' per placename.
+7.1   Zero or one of type 'jurisdiction' per placename.
+

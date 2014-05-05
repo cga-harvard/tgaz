@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS script (
   name                         VARCHAR(32) NOT NULL,
   lang                         VARCHAR(8) NOT NULL,  -- language being written, typically
   dialect                      VARCHAR(8),           -- for example Cantonese specific chars
-  pref_per_lang                SMALLINT NOT NULL,    -- 0/1 boolean, allows determination of default spelling
+  default_per_lang             SMALLINT NOT NULL,    -- 0/1 boolean, allows determination of default spelling
   note                         VARCHAR(512),
 
   PRIMARY KEY (id)

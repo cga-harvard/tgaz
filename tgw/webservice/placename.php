@@ -25,7 +25,7 @@
      'id'              'exonym_lang'     'note'
      'placename_id'    'trsys_id'        'script'
      'script_id'       'attested_by'     'trsys'
-     'written_form'
+     'written_form'    'script_def
 
   partofs:
      'id'              'begin_year'      'parent_sys_id'
@@ -55,10 +55,10 @@ function get_placename($conn, $fmt, $sys_id) {
 
   $spellings = get_deps($conn, "SELECT * FROM v_spelling WHERE placename_id = " . $pn['id'] . ";");
 
-  //calculate preferred written forms
+  //calculate preferred written forms  FIXME - use script.default_per_lang
   foreach ($spellings as $sp) {
     if ($sp['script_id'] != 0) {                      // has script
-      if (!isset($pn['sp_script_form']) || ($sp['script_id'] == 2)) {   //simplified Chinese
+      if (!isset($pn['sp_script_form']) || ($sp['script_def'] == 1)) {   // assign if not assigned or use preferred
         $pn['sp_script_form']  = $sp['written_form'];
       }
     } elseif ($sp['trsys_id'] != 'na') {              // is transcription

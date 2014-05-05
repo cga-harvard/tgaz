@@ -65,9 +65,11 @@ if (false) {
       get_placename($conn, $fmt, $path_parts[3]);
     } else {
 
-//    $id=$_GET["id"];
+//    ;
 
-      if ($id=$_GET["id"])  {
+//      if ($id=$_GET["id"])  {
+      if (isset($_GET["id"]))  {
+        $id=$_GET["id"];
         get_placename($conn, $fmt, $id);
 
       } elseif ($namekey = $_GET["n"]) {
