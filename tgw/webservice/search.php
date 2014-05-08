@@ -1,6 +1,10 @@
 <?php
 
-function get_max_hits() { return 200; }
+define('MAX_SEARCH_HITS', 200);
+define('FIXED_KEY_CHAR','$');
+
+
+//function get_max_hits() { return 200; }
 
 /*
  *
@@ -11,11 +15,20 @@ function get_max_hits() { return 200; }
  */
 function search_placename($conn, $name_key) { //, $year_key) {
 
+//  $max_search_hits = 200;
 //  echo "sp ... " . $name_key;
 
-//FIXME add parent
+//FIXME add date params
+//FIXME add parent in results
 
   if (is_roman($name_key)) {
+
+    if(substr_compare($name_key, '$', -1, 1) === 0) {   //test for last char '$'
+      $name_key = substr($name_key, 0, -1);
+    }  else {
+      $name_key = $name_key . '%';
+    }
+
     $query = "SELECT pn.sys_id, sp_vn.written_form name, sp_tr.written_form transcription, " .
            "pn.ftype_vn 'feature type', pn.ftype_tr 'feature type transcription' " .
            "FROM v_placename pn JOIN spelling sp_vn ON (pn.id = sp_vn.placename_id) " .
@@ -23,8 +36,8 @@ function search_placename($conn, $name_key) { //, $year_key) {
            "JOIN script ON (sp_vn.script_id = script.id) " .
            "WHERE script.default_per_lang = 1 " .
            "AND sp_tr.trsys_id in ('py', 'rj') " .
-           "AND sp_tr.written_form LIKE '" . $name_key . "%' " .
-           "ORDER BY transcription limit " . get_max_hits() . ";";
+           "AND sp_tr.written_form LIKE '" . $name_key . "' " .
+           "ORDER BY transcription limit " . MAX_SEARCH_HITS . ";";
   } else {
     $query = "SELECT pn.sys_id, sp_vn.written_form name, sp_tr.written_form transcription, " .
            "pn.ftype_vn 'feature type', pn.ftype_tr 'feature type transcription' " .
@@ -34,7 +47,7 @@ function search_placename($conn, $name_key) { //, $year_key) {
            "WHERE script.default_per_lang = 1 " .
            "AND sp_tr.trsys_id in ('py', 'rj') " .
            "AND sp_vn.written_form LIKE '" . $name_key . "%' " .
-           "ORDER BY name limit " . get_max_hits() . ";";
+           "ORDER BY name limit " . MAX_SEARCH_HITS . ";";
   }
 
   $pns = array();  //indexed
@@ -45,12 +58,7 @@ function search_placename($conn, $name_key) { //, $year_key) {
     }
 
     mysqli_free_result($result);
-
-//    echo "search hits count = " . count($pns);
-
     to_json_list($pns, $name_key);
-//   echo "{ 'json list' }";
-
 
   }  else { //error
     tlog(E_ERROR, "search_placename error");
@@ -61,22 +69,11 @@ function search_placename($conn, $name_key) { //, $year_key) {
 }
 
 function to_json_list($pns, $name_key) {
-/*
-  $pns_json = array();  //indexed
-
-  foreach ($pns as $pn) {
-    $pns_json[] = array(
-        'sys_id'  => $pn['sys_id'],
-        'sp_vn'   => $pn['sp_vn'],
-        'sp_tr'   => $pn['sp_tr']
-    );
-  }
-*/
 //  echo 'test unicode_ord: ' . unicode_ord("⽇");
 
   $wrapper = array(
       'memo'       => "Results for query matching key '" . $name_key . "'." .
-                       ( (count($pns) >= get_max_hits()) ? '  Returned more than the maximum. Please refine your search.' : ''),
+                       ( (count($pns) >= MAX_SEARCH_HITS) ? '  Returned more than the maximum. Please refine your search.' : ''),
       'count'      => count($pns),
       'hits'       => $pns
   );
@@ -89,7 +86,8 @@ function to_json_list($pns, $name_key) {
 
 function is_roman($str) {
   $c = mb_substr($str, 0, 1, 'utf-8');
-  return (unicode_ord($c) > 31 && unicode_ord($c) < 254);
+  $v = unicode_ord($c);
+  return ($v > 31 && $v < 254);
 }
 
 /*

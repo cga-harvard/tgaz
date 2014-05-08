@@ -7,8 +7,8 @@ require ("./placename.php");
 require ("./service-info.php");
 require ("./search.php");
 
-
-$conn = mysqli_connect("$db_addr", "$db_user", "$db_pass", "$db_name", "$db_port");
+// use persistent connection with "p:" prepended to the hostname
+$conn = mysqli_connect("p:$db_addr", "$db_user", "$db_pass", "$db_name", "$db_port");
 
 if (!$conn) {
     die('Connect Error (' . mysqli_connect_errno() . ') ' . mysqli_connect_error());

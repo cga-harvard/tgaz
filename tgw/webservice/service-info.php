@@ -8,7 +8,6 @@ function get_service_info_json($conn) {
   $pn = mysqli_fetch_array($pn_result, MYSQLI_ASSOC);
   mysqli_free_result($pn_result);
 
-
   $sinfo = array(
     'service name'          => 'China Historical GIS, Harvard University and Fudan University',
     'version no.'           => '5.0',

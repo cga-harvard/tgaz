@@ -3,7 +3,7 @@
 -- each will have at least one spelling - see business rules document
 --
 CREATE TABLE  IF NOT EXISTS placename (
-  id                  INT auto_increment,        -- use for joins and internal purposes
+  id                  INT UNSIGNED auto_increment,  -- use for joins and internal purposes
                                                  -- dropped order_id
                                                  -- may be possible to use sys-Id as PK but no auto-increment
   sys_id              VARCHAR(30) NOT NULL,      -- the chgis primary identifier (not PK)
@@ -59,14 +59,14 @@ INDEX end_rule_idx (end_rule_id),
 --
 --
 CREATE TABLE spelling (
-  id                        INT auto_increment,
-  placename_id              INT NOT NULL,
+  id                        INT UNSIGNED auto_increment,
+  placename_id              INT UNSIGNED NOT NULL,
   script_id                 INT NOT NULL,
   written_form              VARCHAR(256),     -- i.e. the glyph, or text form
   exonym_lang               VARCHAR(8),       -- ISO 2-char, e.g. 'es' for Spanish in the case of 'Las Vegas'
 
   trsys_id                  VARCHAR(10) NOT NULL,  -- for type 'transcription', otherwise use 'na'
-
+  default_for_type          TINYINT NOT NULL DEFAULT 0,    -- 0/1 boolean,
   attested_by               VARCHAR(128),
   note                      VARCHAR(512),
 
@@ -86,8 +86,8 @@ CREATE TABLE spelling (
 -- present location and present jurisdiction notes
 -- the notion of 'present' is a relative one
 CREATE TABLE present_loc (
-  id                           INT auto_increment,
-  placename_id                 INT NOT NULL,
+  id                           INT UNSIGNED auto_increment,
+  placename_id                 INT UNSIGNED NOT NULL,
   type                         ENUM('location', 'jurisdiction') NOT NULL,
   country_code                 VARCHAR(8) NOT NULL,
   text_value                   VARCHAR(128) NOT NULL,
@@ -102,9 +102,9 @@ CREATE TABLE present_loc (
 
 -- preceeded by - immediate precedence relationship between placenames
 CREATE TABLE prec_by (
-  id                           INT auto_increment,     -- prev: pby_uniq_id
-  placename_id                 INT NOT NULL,           -- prev: pby_by_id vc12
-  prec_id                      INT NOT NULL,           -- prev: pby_prev_id  vc12
+  id                           INT UNSIGNED auto_increment,  -- prev: pby_uniq_id
+  placename_id                 INT UNSIGNED NOT NULL,        -- prev: pby_by_id vc12
+  prec_id                      INT UNSIGNED NOT NULL,        -- prev: pby_prev_id  vc12
 
   PRIMARY KEY  (id),
   INDEX precby_pn_idx (placename_id),
@@ -118,9 +118,9 @@ CREATE TABLE prec_by (
 -- relationship between placenames: "child is partof parent"
 -- consider placename - container terminology
 CREATE TABLE part_of (
-  id                           INT auto_increment,
-  child_id                     INT NOT NULL,        -- prev: pot_child_id  vc12
-  parent_id                    INT NOT NULL,        -- prev: pot_parent_id vc12
+  id                           INT UNSIGNED auto_increment,
+  child_id                     INT UNSIGNED NOT NULL,        -- prev: pot_child_id  vc12
+  parent_id                    INT UNSIGNED NOT NULL,        -- prev: pot_parent_id vc12
 
   begin_year                   SMALLINT,            -- prev:  pot_begyr int8
   end_year                     SMALLINT,            -- prev:  pot_endyr int8
@@ -136,9 +136,9 @@ CREATE TABLE part_of (
 --
 --
 CREATE TABLE admin_seat (
-  id                          INT auto_increment,
-  placename_id                INT NOT NULL,                  -- governed admin unit
-  seat_id                     INT NOT NULL,
+  id                          INT UNSIGNED auto_increment,
+  placename_id                INT UNSIGNED NOT NULL,                  -- governed admin unit
+  seat_id                     INT UNSIGNED NOT NULL,
   begin_date                  VARCHAR(10),
   end_date                    VARCHAR(10),
   note                        VARCHAR(1028),
@@ -154,8 +154,8 @@ CREATE TABLE admin_seat (
 --
 --
 CREATE TABLE temporal_annotation (
-  id                        INT auto_increment,
-  placename_id              INT NOT NULL,
+  id                        INT UNSIGNED auto_increment,
+  placename_id              INT UNSIGNED NOT NULL,
   temporal_type             ENUM('begin', 'end'),
   calendar_standard         ENUM('ISO 8601', 'Chinese Lunar', 'Other'),  -- or lookup table
   rule_id                   SMALLINT,             -- accuracy rule ?? type
@@ -180,8 +180,8 @@ CREATE TABLE temporal_annotation (
 -- solution:  create a different table for each type, in this case WKT
 --            this creates a problem for the system_ref table join ??
 CREATE TABLE wkt_definition (
-  id                      INT auto_increment,
-  placename_id            INT NOT NULL,
+  id                      INT UNSIGNED auto_increment,
+  placename_id            INT UNSIGNED NOT NULL,
   object_type             ENUM('point', 'polygon', 'linestring', 'multipoint', 'multilinestring',
                                   'multipolygon', 'geometrycollection') NOT NULL,
 --  definition_type         ENUM('wkt') NOT NULL,        -- unnecessary ??
@@ -197,8 +197,8 @@ CREATE TABLE wkt_definition (
 
 -- external GIS citation, as in an index
 CREATE TABLE spatial_system_ref (
-  id                          INT auto_increment,
-  placename_id                INT NOT NULL,
+  id                          INT UNSIGNED auto_increment,
+  placename_id                INT UNSIGNED NOT NULL,
 
   system_name                 ENUM('Geohex', 'Watershed', 'Other') NOT NULL,
   level                       INT,                           -- for geohex, only
@@ -219,8 +219,8 @@ CREATE TABLE spatial_system_ref (
 --
 --
 CREATE TABLE link (
-  id                        INT auto_increment,
-  placename_id              INT NOT NULL,
+  id                        INT UNSIGNED auto_increment,
+  placename_id              INT UNSIGNED NOT NULL,
   type                      ENUM('map', 'place description', 'authority record', 'other') NOT NULL,
   source                    VARCHAR(32) NOT NULL,
   uri                       VARCHAR(1028) NOT NULL,

@@ -46,6 +46,11 @@ function get_placename($conn, $fmt, $sys_id) {
 
   tlog(E_NOTICE, "Getting placename: " . $sys_id . " in format " . $fmt);
 
+
+  //FIXME - explicitly list fields,
+  //      - use 'coalesce' to replace possible nulls
+  //      - use prepared statements to avoid SQL injection and improve performance
+
   $pn_query = "SELECT * FROM v_placename WHERE sys_id = '$sys_id';";
   $pn_result = mysqli_query($conn, $pn_query) or die("<br />Error: " . mysqli_error());   //FIX ME
   $pn = mysqli_fetch_array($pn_result, MYSQLI_ASSOC);
