@@ -13,13 +13,11 @@ define('FIXED_KEY_CHAR','$');
  *
  *
  */
-function search_placename($conn, $name_key) { //, $year_key) {
+function search_placename($conn, $name_key, $year_key) {
 
-//  $max_search_hits = 200;
 //  echo "sp ... " . $name_key;
 
-//FIXME add date params
-//FIXME add parent in results
+//FIXME multiple parent years
 
   if (is_roman($name_key)) {
 
@@ -29,42 +27,76 @@ function search_placename($conn, $name_key) { //, $year_key) {
       $name_key = $name_key . '%';
     }
 
-    $query = "SELECT pn.sys_id, sp_vn.written_form name, sp_tr.written_form transcription, " .
-           "pn.ftype_vn 'feature type', pn.ftype_tr 'feature type transcription' " .
-           "FROM v_placename pn JOIN spelling sp_vn ON (pn.id = sp_vn.placename_id) " .
-           "JOIN spelling sp_tr ON (pn.id = sp_tr.placename_id) " .
-           "JOIN script ON (sp_vn.script_id = script.id) " .
-           "WHERE script.default_per_lang = 1 " .
-           "AND sp_tr.trsys_id in ('py', 'rj') " .
-           "AND sp_tr.written_form LIKE '" . $name_key . "' " .
-           "ORDER BY transcription limit " . MAX_SEARCH_HITS . ";";
-  } else {
-    $query = "SELECT pn.sys_id, sp_vn.written_form name, sp_tr.written_form transcription, " .
-           "pn.ftype_vn 'feature type', pn.ftype_tr 'feature type transcription' " .
-           "FROM v_placename pn JOIN spelling sp_vn ON (pn.id = sp_vn.placename_id) " .
-           "JOIN spelling sp_tr ON (pn.id = sp_tr.placename_id) " .
-           "JOIN script ON (sp_vn.script_id = script.id) " .
-           "WHERE script.default_per_lang = 1 " .
-           "AND sp_tr.trsys_id in ('py', 'rj') " .
-           "AND sp_vn.written_form LIKE '" . $name_key . "%' " .
-           "ORDER BY name limit " . MAX_SEARCH_HITS . ";";
-  }
+    $query = "SELECT pn.sys_id, pn.name, pn.transcription, concat(pn.beg_yr, '-', pn.end_yr) years, " .
+        "pn.ftype_vn 'feature type', pn.ftype_tr 'feature type transcription', " .
+        "parent.name 'parent name', parent.transcription 'parent transcription', " .
+        "concat(parent.beg_yr, '-', parent.end_yr) 'parent years' " .
+        "FROM mv_pn_srch pn LEFT JOIN part_of pof ON (pn.id = pof.child_id) " .
+        "LEFT JOIN v_pn_srch parent ON (parent.id = pof.parent_id) " .
+        "WHERE pn.transcription LIKE ? ";
 
-  $pns = array();  //indexed
-
-  if ($result = mysqli_query($conn, $query)) {
-    while ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
-      $pns[] = $row;
+    if ($year_key) {
+        $query .= "AND (pn.beg_yr >= ? AND pn.end_yr <= ? ) ";
     }
 
-    mysqli_free_result($result);
-    to_json_list($pns, $name_key);
+    $query .=    "ORDER BY pn.transcription, pn.sys_id limit " . MAX_SEARCH_HITS . ";";
 
-  }  else { //error
-    tlog(E_ERROR, "search_placename error");
-    echo "search placename error";
+  } else {
+
+    $query = "SELECT pn.sys_id, pn.name, pn.transcription, concat(pn.beg_yr, '-', pn.end_yr) years, " .
+        "pn.ftype_vn 'feature type', pn.ftype_tr 'feature type transcription', " .
+        "parent.name 'parent name', parent.transcription 'parent transcription', " .
+        "concat(parent.beg_yr, '-', parent.end_yr) 'parent years' " .
+        "FROM mv_pn_srch pn LEFT JOIN part_of pof ON (pn.id = pof.child_id) " .
+        "LEFT JOIN v_pn_srch parent ON (parent.id = pof.parent_id) " .
+        "WHERE pn.name LIKE ? " .
+        "ORDER BY pn.name, pn.sys_id limit " . MAX_SEARCH_HITS . ";";
+
+           $name_key .= '%';
   }
 
+  if (!$stmt = $conn->prepare($query)) {
+      tlog(E_ERROR, "mysqli prepare failure: " . $stmt->errno . " - " . $stmt->error);
+      echo "error";
+      return;
+  }
+
+//echo 'name key = ' . $name_key;
+//echo 'query = ' . $query;
+
+  if ($year_key) {
+      echo 'yr param not null';
+      if (!$stmt->bind_param('sii', $name_key, $year_key, $year_key)) {       // 'sii' means '1 string and 2 int params'
+          tlog(E_ERROR, "mysqli binding yr parameters failed: " . $stmt->errno . " - " . $stmt->error);
+          echo "error";
+          return;
+      }
+  } else {
+      if (!$stmt->bind_param('s', $name_key)) {                             // 's' means 'one string param'
+          tlog(E_ERROR, "mysqli binding parameters failed: " . $stmt->errno . " - " . $stmt->error);
+          echo "error";
+          return;
+      }
+  }
+
+  if (!$stmt->execute()) {
+     tlog("mysqli statement execute failed: (" . $stmt->errno . " - " . $stmt->error);
+     echo "error";
+     return;
+  } else {
+
+    $pns = array();  //indexed
+
+    $result = $stmt->get_result();
+    while ($row = $result->fetch_assoc()) {
+       $pns[] = $row;
+    }
+
+    $result->free();
+    $stmt->close();
+
+    to_json_list($pns, $name_key);
+  }
 
 }
 
@@ -83,6 +115,28 @@ function to_json_list($pns, $name_key) {
 
 }
 
+// input:  ordered placenames
+// process:  for repeated sys_ids reformat as a single item with a compound field for multiple parents
+// ?? now that there is a materialized view, perhaps this can be done there?
+// if here, perhaps specific to json:  parents : [ "p1" : "1911-1913", "p2" : "1914-1915" ]
+function reduce_parents($pns) {
+  // create new array
+  pns2 = array();
+
+  $prev = null;
+  $max = 6;      //maximum number of parents to concatenate
+
+  foreach($pns as $pn) {
+    if ($pn['id'] == $prev['id']) {
+        // append parent to prev.parent
+
+    } else {
+      pns2[] = $pn;
+    }
+  }
+
+  return pns2;
+}
 
 function is_roman($str) {
   $c = mb_substr($str, 0, 1, 'utf-8');

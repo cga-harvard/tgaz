@@ -53,35 +53,33 @@ if (false) {
 
   } elseif ($service == "placename") {
 
-    // first try for fmt in path_part[3]
-    // id in part[4]
+    $fmt = "json";  //default
 
-    $fmt=$_GET["fmt"];
-    if (!($fmt ))  {  // test for one of:  xml, geojson, json, http?
-      $fmt = "json";
-    }
-
-    if (isset($path_parts[3])) { // and matches /hvd_\d+/
-      get_placename($conn, $fmt, $path_parts[3]);
+    if (isset($path_parts[3])) {
+      if ($path_parts[3] == 'json' || $path_parts[3] == 'xml' || $path_parts[3] == 'rdf') {
+        get_placename($conn, $path_parts[3], $path_parts[4]);  // FIXME verify exists
+      } else {
+        get_placename($conn, $fmt, $path_parts[3]);
+      }
     } else {
 
-//    ;
-
-//      if ($id=$_GET["id"])  {
       if (isset($_GET["id"]))  {
-        $id=$_GET["id"];
-        get_placename($conn, $fmt, $id);
-
-      } elseif ($namekey = $_GET["n"]) {
-        search_placename($conn, $namekey);  //, null);
+        if (isset($_GET["fmt"])) {
+          $fmt = $_GET["fmt"];
+        }
+        get_placename($conn, $fmt, $_GET["id"]);
+      } elseif (isset($_GET["n"])) {
+        if (isset($_GET["yr"])) {
+          search_placename($conn, $_GET["n"], $_GET["yr"]);
+        } else {
+          search_placename($conn, $_GET["n"], null);
+        }
       } else {
         tlog(E_ERROR, "Id or Name not in request.");
         mysqli_close($conn);
         exit();
       }
     }
-
-//    get_placename($conn, $fmt, $id);
   } else if ($service == "featuretype") {
     ;
   } else  {

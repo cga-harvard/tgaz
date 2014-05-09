@@ -97,8 +97,8 @@ FROM (main_xx m JOIN gis_xx g ON m.orig_id = g.sys_id) LEFT JOIN snote sn ON  m.
 
 -- script id = 1 for traditional
 
- INSERT INTO spelling (placename_id, script_id, written_form, exonym_lang, trsys_id, attested_by, note )
- SELECT pn.id, 1, m.name_trad, NULL, 'na', NULL, NULL
+ INSERT INTO spelling (placename_id, script_id, written_form, exonym_lang, trsys_id, default_per_type, attested_by, note )
+ SELECT pn.id, 1, m.name_trad, NULL, 'na', 0, NULL, NULL
  FROM main_xx m, placename pn
  WHERE m.sys_id = pn.sys_id;
 
@@ -107,8 +107,8 @@ FROM (main_xx m JOIN gis_xx g ON m.orig_id = g.sys_id) LEFT JOIN snote sn ON  m.
 
 -- script id = 2 for simplified
 
- INSERT INTO spelling (placename_id, script_id, written_form, exonym_lang, trsys_id, attested_by, note )
-SELECT pn.id, 2, m.nm_simp, NULL, 'na' , NULL, NULL
+ INSERT INTO spelling (placename_id, script_id, written_form, exonym_lang, trsys_id, default_per_type, attested_by, note )
+SELECT pn.id, 2, m.nm_simp, NULL, 'na' , 1, NULL, NULL
 FROM main_xx m, placename pn
 WHERE m.sys_id = pn.sys_id;
 
@@ -117,8 +117,8 @@ WHERE m.sys_id = pn.sys_id;
 
 -- script id = 0 for n/a
 
- INSERT INTO spelling (placename_id, script_id, written_form, exonym_lang, trsys_id, attested_by, note )
-SELECT pn.id, 0, m.nm_py, NULL, 'py', NULL, NULL
+ INSERT INTO spelling (placename_id, script_id, written_form, exonym_lang, trsys_id, default_per_type, attested_by, note )
+SELECT pn.id, 0, m.nm_py, NULL, 'py', 1, NULL, NULL
 FROM main_xx m, placename pn
 WHERE m.sys_id = pn.sys_id;
 
