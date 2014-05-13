@@ -3,25 +3,15 @@
 define('MAX_SEARCH_HITS', 200);
 define('FIXED_KEY_CHAR','$');
 
-
-//function get_max_hits() { return 200; }
-
 /*
- *
- *
- *    update query when the default script/trsys issue is resolved
  *
  *
  */
 function search_placename($conn, $name_key, $year_key) {
 
-//  echo "sp ... " . $name_key;
-
-//FIXME multiple parent years
-
   if (is_roman($name_key)) {
 
-    if(substr_compare($name_key, '$', -1, 1) === 0) {   //test for last char '$'
+    if(substr_compare($name_key, '$', -1, 1) === 0) {   //test for last char '$' to indicate no wildcard
       $name_key = substr($name_key, 0, -1);
     }  else {
       $name_key = $name_key . '%';
@@ -29,10 +19,10 @@ function search_placename($conn, $name_key, $year_key) {
 
     $query = "SELECT pn.sys_id, pn.name, pn.transcription, concat(pn.beg_yr, '-', pn.end_yr) years, " .
         "pn.ftype_vn 'feature type', pn.ftype_tr 'feature type transcription', " .
-        "parent.name 'parent name', parent.transcription 'parent transcription', " .
+        "parent.sys_id 'parent sys_id', parent.name 'parent name', parent.transcription 'parent transcription', " .
         "concat(parent.beg_yr, '-', parent.end_yr) 'parent years' " .
         "FROM mv_pn_srch pn LEFT JOIN part_of pof ON (pn.id = pof.child_id) " .
-        "LEFT JOIN v_pn_srch parent ON (parent.id = pof.parent_id) " .
+        "LEFT JOIN mv_pn_srch parent ON (parent.id = pof.parent_id) " .
         "WHERE pn.transcription LIKE ? ";
 
     if ($year_key) {
@@ -45,12 +35,14 @@ function search_placename($conn, $name_key, $year_key) {
 
     $query = "SELECT pn.sys_id, pn.name, pn.transcription, concat(pn.beg_yr, '-', pn.end_yr) years, " .
         "pn.ftype_vn 'feature type', pn.ftype_tr 'feature type transcription', " .
-        "parent.name 'parent name', parent.transcription 'parent transcription', " .
+        "parent.sys_id, parent.name 'parent name', parent.transcription 'parent transcription', " .
         "concat(parent.beg_yr, '-', parent.end_yr) 'parent years' " .
         "FROM mv_pn_srch pn LEFT JOIN part_of pof ON (pn.id = pof.child_id) " .
-        "LEFT JOIN v_pn_srch parent ON (parent.id = pof.parent_id) " .
+        "LEFT JOIN mv_pn_srch parent ON (parent.id = pof.parent_id) " .
         "WHERE pn.name LIKE ? " .
         "ORDER BY pn.name, pn.sys_id limit " . MAX_SEARCH_HITS . ";";
+
+    //FIXME $year_key
 
            $name_key .= '%';
   }
@@ -95,47 +87,67 @@ function search_placename($conn, $name_key, $year_key) {
     $result->free();
     $stmt->close();
 
-    to_json_list($pns, $name_key);
-  }
+//    to_json_list($pns, $name_key);
+//  }
 
-}
+//}
 
-function to_json_list($pns, $name_key) {
+//function to_json_list($pns, $name_key) {
 //  echo 'test unicode_ord: ' . unicode_ord("⽇");
 
-  $wrapper = array(
-      'memo'       => "Results for query matching key '" . $name_key . "'." .
-                       ( (count($pns) >= MAX_SEARCH_HITS) ? '  Returned more than the maximum. Please refine your search.' : ''),
-      'count'      => count($pns),
-      'hits'       => $pns
-  );
+    $pns2 = reduce_parents($pns);
 
-  header('Content-Type: text/json; charset=utf-8');
-  echo json_encode($wrapper, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT );
+    $wrapper = array(
+        'memo'       => "Results for query matching key '" . $name_key .  "'" .
+                         ( (count($pns) >= MAX_SEARCH_HITS) ? '  Returned more than the maximum. Please refine your search.' : ''),
+        'count'      => count($pns2),
+        'hits'       => $pns2
+    );
 
+    header('Content-Type: text/json; charset=utf-8');
+    echo json_encode($wrapper, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT );
+  }
 }
 
 // input:  ordered placenames
 // process:  for repeated sys_ids reformat as a single item with a compound field for multiple parents
-// ?? now that there is a materialized view, perhaps this can be done there?
-// if here, perhaps specific to json:  parents : [ "p1" : "1911-1913", "p2" : "1914-1915" ]
 function reduce_parents($pns) {
   // create new array
-  pns2 = array();
+  $pns2 = array();
 
   $prev = null;
   $max = 6;      //maximum number of parents to concatenate
 
   foreach($pns as $pn) {
-    if ($pn['id'] == $prev['id']) {
-        // append parent to prev.parent
 
+    if ($pn['parent sys_id'] == null) {
+      $parent = null;
     } else {
-      pns2[] = $pn;
+      $parent = array(
+          'sys_id'          => $pn['parent sys_id'],
+          'name'            => $pn['parent name'],
+          'transcription'   => $pn['parent transcription'],
+          'years'           => $pn['parent years']
+      );
     }
+
+    if (($prev != null) && ($pn['sys_id'] == $prev['sys_id'])) {
+      $pns2[count($pns2) - 1]['parents'][] =   $parent;
+    } else {
+
+      $pns2[] = array(
+        'sys_id'          => $pn['sys_id'],
+        'name'            => $pn['name'],
+        'transcription'   => $pn['transcription'],
+        'years'           => $pn['years'],
+        'parents'         => ($parent == null ? array() : array($parent))
+      );
+
+      $prev = $pn;  //keep a reference to this pn for the next iteration
+    }               //however, cannot append to this reference (php mystery)
   }
 
-  return pns2;
+  return $pns2;
 }
 
 function is_roman($str) {
