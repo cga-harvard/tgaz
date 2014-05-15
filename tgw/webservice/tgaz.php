@@ -29,24 +29,10 @@ $url_path = parse_url( $requrl, PHP_URL_PATH);
 //
 
 $path_parts = explode('/', $url_path);
-//FIXME check for required elements
 
-$service = $path_parts[2];
-
-//foreach ($path_parts as $part) {
-//  echo '<br /> part = ' . $part;
-//}
-//echo '<br /> service:' . $service;
-
-// regex parse:  api\/['placename'|'featuretype']\/['json'|'xml]\/(w+)
-
-// for now pretend that the url will come in as:  /api/placename/:fmt/:id
-
-
-if (false) {
-
-
-} else {      //routing of the uri elements
+//routing of the uri elements
+if (isset($path_parts[2])) {
+  $service = $path_parts[2];
 
   if ($service == "service-info") {
     get_service_info_json($conn);

@@ -33,18 +33,20 @@ function search_placename($conn, $name_key, $year_key) {
 
   } else {
 
+    $name_key .= '%';
     $query = "SELECT pn.sys_id, pn.name, pn.transcription, concat(pn.beg_yr, '-', pn.end_yr) years, " .
         "pn.ftype_vn 'feature type', pn.ftype_tr 'feature type transcription', " .
         "parent.sys_id, parent.name 'parent name', parent.transcription 'parent transcription', " .
         "concat(parent.beg_yr, '-', parent.end_yr) 'parent years' " .
         "FROM mv_pn_srch pn LEFT JOIN part_of pof ON (pn.id = pof.child_id) " .
         "LEFT JOIN mv_pn_srch parent ON (parent.id = pof.parent_id) " .
-        "WHERE pn.name LIKE ? " .
-        "ORDER BY pn.name, pn.sys_id limit " . MAX_SEARCH_HITS . ";";
+        "WHERE pn.name LIKE ? ";
 
-    //FIXME $year_key
+    if ($year_key) {
+        $query .= "AND (pn.beg_yr >= ? AND pn.end_yr <= ? ) ";
+    }
 
-           $name_key .= '%';
+    $query .=    "ORDER BY pn.name, pn.sys_id limit " . MAX_SEARCH_HITS . ";";
   }
 
   if (!$stmt = $conn->prepare($query)) {
@@ -57,7 +59,6 @@ function search_placename($conn, $name_key, $year_key) {
 //echo 'query = ' . $query;
 
   if ($year_key) {
-      echo 'yr param not null';
       if (!$stmt->bind_param('sii', $name_key, $year_key, $year_key)) {       // 'sii' means '1 string and 2 int params'
           tlog(E_ERROR, "mysqli binding yr parameters failed: " . $stmt->errno . " - " . $stmt->error);
           echo "error";
@@ -87,18 +88,11 @@ function search_placename($conn, $name_key, $year_key) {
     $result->free();
     $stmt->close();
 
-//    to_json_list($pns, $name_key);
-//  }
-
-//}
-
-//function to_json_list($pns, $name_key) {
-//  echo 'test unicode_ord: ' . unicode_ord("⽇");
-
     $pns2 = reduce_parents($pns);
 
     $wrapper = array(
-        'memo'       => "Results for query matching key '" . $name_key .  "'" .
+        'memo'       => "Results for query matching key '$name_key'" .
+                         ( $year_key ? " and year '$year_key'" : "") .
                          ( (count($pns) >= MAX_SEARCH_HITS) ? '  Returned more than the maximum. Please refine your search.' : ''),
         'count'      => count($pns2),
         'hits'       => $pns2

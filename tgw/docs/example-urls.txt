@@ -1,0 +1,29 @@
+tgaz 
+test urls
+
+# static service info
+http://localhost:8080/tgaz.php/service-info
+
+# single placename lookup
+
+#restful style
+http://localhost:8080/tgaz.php/placename/json/hvd_32180
+
+#query parameter style
+http://localhost:8080/tgaz.php/placename?fmt=json&id=hvd_32180
+
+
+#placename search
+http://localhost:8080/tgaz.php/placename?fmt=json&n=tianbao
+
+#defeat default wildcard with $ char
+http://localhost:8080/tgaz.php/placename?fmt=json&n=tianba$
+
+#placename search with Asian chars will sort properly
+http://localhost:8080/tgaz.php/placename?fmt=json&n=天保
+
+#example of part_of parents
+http://localhost:8080/tgaz.php/placename?fmt=json&id=hvd_32180
+
+#placename search with name and year keys
+http://localhost:8080/tgaz.php/placename?fmt=json&n=tianbao&y=1911
