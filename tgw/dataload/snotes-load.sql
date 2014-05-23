@@ -23,6 +23,5 @@ LINES TERMINATED BY '\n'
 
 
 -- Note the default values for the current data
-
-insert into snote select NULL, nts_noteid, 'Fudan', nts_comp, 'zh',  nts_nmft, NULL, NULL, nts_fullnote from snote_xx; 
-
+ 
+insert into snote select NULL, nts_noteid, 'Fudan', nts_comp,  'zh', nts_nmft, NULL, nts_fullnote, NULL from snote_xx; 

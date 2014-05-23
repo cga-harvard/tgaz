@@ -14,7 +14,7 @@ CREATE TABLE  IF NOT EXISTS placename (
                                                  -- for CHGIS before tgaz, the sys_id (without hvd_ prefix
 
   snote_id            INT,                       -- FK, can be NULL
-  alt_of_id           INT,                       -- FK, can be NULL
+  alt_of_id           INT UNSIGNED,              -- FK, can be NULL
   lev_rank            CHAR(2),                   -- level_rank ; administrative level assigned by FUDON
 
 -- temporal

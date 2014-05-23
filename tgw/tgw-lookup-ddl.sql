@@ -63,8 +63,8 @@ CREATE TABLE IF NOT EXISTS script (
 ) ENGINE = INNODB;
 
 INSERT INTO script VALUES (0, 'n/a', 'xx', '', 0, NULL);
-INSERT INTO script VALUES (1, 'traditional Chinese', 'zh', '', 0, NULL);
-INSERT INTO script VALUES (2, 'simplified Chinese', 'zh', '', 1, NULL);
+INSERT INTO script VALUES (1, 'traditional Chinese', 'zh', '', 1, NULL);
+INSERT INTO script VALUES (2, 'simplified Chinese', 'zh', '', 0, NULL);
 INSERT INTO script VALUES (3, 'variant Chinese', 'zh', '', 0, NULL);
 INSERT INTO script VALUES (4, 'Kanji', 'ja', '', 1, NULL);
 INSERT INTO script VALUES (5, 'Hirigana', 'ja', '', 0, NULL);
