@@ -48,13 +48,34 @@ function get_placename($conn, $fmt, $sys_id) {
 
 
   //FIXME - explicitly list fields,
-  //      - use 'coalesce' to replace possible nulls
-  //      - use prepared statements to avoid SQL injection and improve performance
+  //      - use  SQL 'coalesce' to replace possible nulls or do this in PHP
 
-  $pn_query = "SELECT * FROM v_placename WHERE sys_id = '$sys_id';";
-  $pn_result = mysqli_query($conn, $pn_query) or die("<br />Error: " . mysqli_error());   //FIX ME
+  $pn_query = "SELECT * FROM v_placename WHERE sys_id = ?;";  //'$sys_id'
+
+  if (!$stmt = $conn->prepare($pn_query)) {
+      tlog(E_ERROR, "mysqli prepare failure: " . mysqli_error());
+      alt_response(500);
+  }
+
+  if (!$stmt->bind_param('s', $sys_id)) {                            // 's' means '1 string param'
+      tlog(E_ERROR, "mysqli binding sys_id param failed: " . $stmt->errno . " - " . $stmt->error);
+      alt_response(500);
+  }
+
+  if (!$stmt->execute()) {
+     tlog("mysqli statement execute failed: (" . $stmt->errno . " - " . $stmt->error);
+     alt_response(500);
+     return;
+  }
+
+  $pn_result = $stmt->get_result();
   $pn = mysqli_fetch_array($pn_result, MYSQLI_ASSOC);
   mysqli_free_result($pn_result);
+
+  if (count($pn) == 0) {
+    tlog(E_NOTICE, "No placename found for id: " . $sys_id);
+    alt_response(404, "No placename found for id: " . $sys_id);  //will exit here
+  }
 
   $pn['self_uri'] = 'http://chgis.harvard.edu/placename/' . $pn['sys_id'];
 

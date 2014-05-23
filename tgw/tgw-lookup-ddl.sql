@@ -137,7 +137,7 @@ CREATE TABLE IF NOT EXISTS ftype (
 ) ENGINE = INNODB;
 
 -- special 'unknown' row
-INSERT INTO ftype VALUES (0, '未知', '未知', 'wei zhi', 'unknown', NULL, NULL, 'CHGIS', NULL, NULL, NULL, NULL);
+-- INSERT INTO ftype VALUES (0, '未知', '未知', 'wei zhi', 'unknown', NULL, NULL, 'CHGIS', NULL, NULL, NULL, NULL);
 -- id = 0 didn't work probably due to the auto_increment, gave id as 1120
 
 

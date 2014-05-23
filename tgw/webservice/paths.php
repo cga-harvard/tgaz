@@ -10,7 +10,7 @@ $conn = mysqli_connect("p:$db_addr", "$db_user", "$db_pass", "$db_name", "$db_po
       die('Connect Error (' . mysqli_connect_errno() . ') ' . mysqli_connect_error());
   }
 
-set_time_limit(120);
+set_time_limit(800);  //default is 30 which times out, may need longer for complete processing
 
 build_all_paths($conn);
 
@@ -19,8 +19,7 @@ echo "<br /> done";
 
 function build_all_paths($conn) {
 
-  // select distinct children from part_of (limit to x for dev)
-  $children_query = "SELECT DISTINCT child_id FROM part_of LIMIT 170;";  // LIMIT 4800
+  $children_query = "SELECT DISTINCT child_id FROM part_of LIMIT 40;";  // LIMIT 4800
   $result = mysqli_query($conn, $children_query) or die("<br />Error: " . mysqli_error($conn));
   $children = mysqli_fetch_all($result, MYSQLI_NUM);
   mysqli_free_result($result);
@@ -34,7 +33,7 @@ function build_all_paths($conn) {
      $pth = build_paths($conn, $child_id[0], 1, $acc);
   }
 
-  echo "<br />size of ppaths: " . count($acc);
+  echo "<br />count of processed placenames: " . count($acc);
 
   insert_to_table($conn, $acc);
 
@@ -143,7 +142,7 @@ function insert_to_table($conn, $acc) {
     foreach($path_info as $pnar) {
       //$pn_id = $pn[
       $pn_path = isset($pnar['path']) ? $pnar['path'] : '';
-      echo "<br /> insert:  pn_id: $pn_id ; path: $pn_path ";
+//      echo "<br /> insert:  pn_id: $pn_id ; path: $pn_path ";
       $stmt->execute();
     }
   }

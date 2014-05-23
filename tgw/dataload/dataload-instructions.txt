@@ -41,5 +41,7 @@
 -- Populate the part_of table.
 --   Use partof-load.sql
 
+-- To support the PHP web application code, create the views in tgw-views.sql
+
 
 

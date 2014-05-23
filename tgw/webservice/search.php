@@ -50,8 +50,8 @@ function search_placename($conn, $name_key, $year_key) {
   }
 
   if (!$stmt = $conn->prepare($query)) {
-      tlog(E_ERROR, "mysqli prepare failure: " . $stmt->errno . " - " . $stmt->error);
-      echo "error";
+      tlog(E_ERROR, "mysqli prepare failure: " . mysqli_error());
+      alt_response(500);
       return;
   }
 
@@ -61,20 +61,20 @@ function search_placename($conn, $name_key, $year_key) {
   if ($year_key) {
       if (!$stmt->bind_param('sii', $name_key, $year_key, $year_key)) {       // 'sii' means '1 string and 2 int params'
           tlog(E_ERROR, "mysqli binding yr parameters failed: " . $stmt->errno . " - " . $stmt->error);
-          echo "error";
+          alt_response(500);
           return;
       }
   } else {
       if (!$stmt->bind_param('s', $name_key)) {                             // 's' means 'one string param'
           tlog(E_ERROR, "mysqli binding parameters failed: " . $stmt->errno . " - " . $stmt->error);
-          echo "error";
+          alt_response(500);
           return;
       }
   }
 
   if (!$stmt->execute()) {
      tlog("mysqli statement execute failed: (" . $stmt->errno . " - " . $stmt->error);
-     echo "error";
+     alt_response(500);
      return;
   } else {
 
