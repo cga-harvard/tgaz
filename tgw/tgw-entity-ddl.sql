@@ -66,7 +66,7 @@ CREATE TABLE spelling (
   exonym_lang               VARCHAR(8),       -- ISO 2-char, e.g. 'es' for Spanish in the case of 'Las Vegas'
 
   trsys_id                  VARCHAR(10) NOT NULL,  -- for type 'transcription', otherwise use 'na'
-  default_for_type          TINYINT NOT NULL DEFAULT 0,    -- 0/1 boolean,
+  default_per_type          TINYINT NOT NULL DEFAULT 0,    -- 0/1 boolean,
   attested_by               VARCHAR(128),
   note                      VARCHAR(512),
 

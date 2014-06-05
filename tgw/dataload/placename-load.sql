@@ -130,3 +130,9 @@ WHERE m.sys_id = pn.sys_id;
 
 -- present location
 
+INSERT INTO present_loc
+SELECT NULL, pn.id, 'location', 'cn', m.pres_loc, 'Fudan', NULL 
+from main_xx m, placename pn
+where pn.sys_id = m.sys_id;
+
+
