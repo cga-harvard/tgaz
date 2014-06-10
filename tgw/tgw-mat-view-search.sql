@@ -15,7 +15,7 @@ SET @r := 0;
 
 CREATE TABLE mv_pn_srch AS
 SELECT pn.id, pn.sys_id, pn.data_src, sp_vn.written_form name, sp_tr.written_form transcription,
-  pn.beg_yr, pn.end_yr, pn.x_coord, pn.y_coord, ftype.name_vn ftype_vn, ftype.name_tr ftype_tr
+  pn.beg_yr, pn.end_yr, pn.x_coord, pn.y_coord, ftype.name_vn ftype_vn, ftype.name_tr ftype_tr,
   pof.parent_id, pof.parent_sys_id, pof.parent_vn, pof.parent_tr, (@r := @r + 1) counter_id
 FROM placename pn JOIN ftype ON (pn.ftype_id = ftype.id)
 LEFT JOIN spelling sp_vn ON (pn.id = sp_vn.placename_id)
