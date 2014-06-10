@@ -1,5 +1,7 @@
 <?php
 
+include ("./elroy.inc");
+
 define('MAX_SEARCH_HITS', 200);
 define('FIXED_KEY_CHAR','$');
 
@@ -7,7 +9,7 @@ define('FIXED_KEY_CHAR','$');
  *
  *
  */
-function search_placename($conn, $name_key, $year_key, $fmt = 'json', $data_src = 'ANY', $ftype = 'ANY') {
+function search_placename($conn, $name_key, $year_key, $fmt = 'json', $src_key, $ftype_key) {
 
   if(substr_compare($name_key, '$', -1, 1) === 0) {   //test for last char '$' to indicate no wildcard
     $name_key = substr($name_key, 0, -1);
@@ -16,25 +18,34 @@ function search_placename($conn, $name_key, $year_key, $fmt = 'json', $data_src 
   }
 
   $query = "SELECT pn.sys_id, pn.data_src, pn.name, pn.transcription, pn.beg_yr, pn.end_yr, " .
-      "pn.ftype_vn, pn.ftype_tr, " .
+      "pn.ftype_vn, pn.ftype_tr, pn.x_coord, pn.y_coord, " .
       "pn.parent_sys_id 'parent sys_id', pn.parent_vn 'parent name', pn.parent_tr 'parent transcription' " .
       "FROM mv_pn_srch pn JOIN spelling sp ON (sp.placename_id = pn.id) " .
       "WHERE sp.written_form LIKE ? ";
 
+  $bindParam = new BindParam();  // in tgaz_lib
+  $bindParam->add('s', $name_key);
+
   if ($year_key) {
-      $query .= "AND (pn.beg_yr >= ? AND pn.end_yr <= ? ) ";
+      $query .= "AND (pn.beg_yr <= ? AND pn.end_yr >= ? ) ";
+      $bindParam->add('i', $year_key);  //begin
+      $bindParam->add('i', $year_key);  //end
   }
 
-  if ($data_src != 'ANY') {
-      $query .= "AND pn.data_src = '" . $data_src . "' ";
+  if ($src_key != null) {
+      $src_key = strtoupper($src_key);
+      $bindParam->add('s', $src_key);
+      $query .= "AND pn.data_src = ? ";
   }
 
-  if ($ftype != 'ANY') {
-      $query .= "AND pn.ftype_tr = '" . $ftype . "' ";  // FIXME   LIKE ?? Chinese vs Roman ?? some official id ??
+  if ($ftype_key != null) {
+      $bindParam->add('s', $ftype_key);  //vernacular
+      $bindParam->add('s', $ftype_key);  // transcription
+      //other names (alt, English) deferred
+      $query .= "AND (pn.ftype_vn = ? OR pn.ftype_tr = ?) ";
   }
 
   $query .=    "ORDER BY pn.transcription, pn.sys_id limit " . MAX_SEARCH_HITS . ";";
-
 
   if (!$stmt = $conn->prepare($query)) {
       tlog(E_ERROR, "mysqli prepare failure: " . $conn->error);
@@ -42,18 +53,10 @@ function search_placename($conn, $name_key, $year_key, $fmt = 'json', $data_src 
       return;
   }
 
-  if ($year_key) {
-      if (!$stmt->bind_param('sii', $name_key, $year_key, $year_key)) {       // 'sii' means '1 string and 2 int params'
-          tlog(E_ERROR, "mysqli binding yr parameters failed: " . $stmt->errno . " - " . $stmt->error);
-          alt_response(500);
-          return;
-      }
-  } else {
-      if (!$stmt->bind_param('s', $name_key)) {                             // 's' means 'one string param'
-          tlog(E_ERROR, "mysqli binding parameters failed: " . $stmt->errno . " - " . $stmt->error);
-          alt_response(500);
-          return;
-      }
+  if (!call_user_func_array( array($stmt, 'bind_param'), $bindParam->get())) {
+      tlog(E_ERROR, "mysqli binding yr parameters failed: " . $stmt->errno . " - " . $stmt->error);
+      alt_response(500);
+      return;
   }
 
   if (!$stmt->execute()) {
@@ -88,11 +91,11 @@ function search_placename($conn, $name_key, $year_key, $fmt = 'json', $data_src 
 
     switch($fmt) {
       case 'json':
-        search_to_json($pns, $name_key, $year_key); break;
-      case 'html':
-        search_to_html($pns, $name_key, $year_key); break;
+        search_to_json($pns, $name_key, $year_key, $src_key, $ftype_key); break;
+//      case 'html':
+//        search_to_html($pns, $name_key, $year_key); break;
       case 'xml':
-        search_to_xml($pns, $name_key, $year_key); break;
+        search_to_xml($pns, $name_key, $year_key, $src_key, $ftype_key); break;
       default:
         tlog(E_WARNING, "Invalid fmt type: " . $fmt);
         //FIXME - output?? shouldn't really get here
@@ -100,7 +103,7 @@ function search_placename($conn, $name_key, $year_key, $fmt = 'json', $data_src 
   }
 }
 
-function search_to_json($pns, $name_key, $year_key) {
+function search_to_json($pns, $name_key, $year_key, $src_key, $ftype_key) {
 
     //reformat field display for json
     $pns_json = [];
@@ -115,13 +118,14 @@ function search_to_json($pns, $name_key, $year_key) {
 
         $pns_json[] = array(
           'sys_id'          => $pn['sys_id'],
-          'uri'             => 'http://chgis.hmdc.harvard.edu/placename/' . $pn['sys_id'],
+          'uri'             => BASE_URL . '/placename/' . $pn['sys_id'],
           'name'            => $pn['name'],
           'transcription'   => $pn['transcription'],
           'years'           => $pn['beg_yr'] . " ~ " . $pn['end_yr'],
           'parent sys_id'   => $pn['parent sys_id'],
           'parent name'     => $parent_name,
           'feature type'    => $pn['ftype_vn'] . " (" . $pn['ftype_tr'] . ")",
+          'xy coordinates'  => $pn['x_coord'] . ", " . $pn['y_coord'],
           'data source'     => $pn['data_src']
         );
     }
@@ -133,6 +137,8 @@ function search_to_json($pns, $name_key, $year_key) {
     $jt .= jline('system', 'CHGIS - Harvard University & Fudan University', 1)
         .  jline('memo', "Results for query matching key '$name_key'"
         . ( $year_key ? " and year '$year_key'" : "")
+        . ( $src_key ? " and data source '$src_key'" : "")
+        . ( $ftype_key ? " and feature type '$ftype_key'" : "")
         . ( (count($pns) >= MAX_SEARCH_HITS) ? '  Returned more than the maximum. Please refine your search.' : ''), 1)
         .  jline('count', count($pns), 1)
 //        .  $indent . "\"hits\" : [\n"
@@ -144,7 +150,7 @@ function search_to_json($pns, $name_key, $year_key) {
     echo $jt;
 }
 
-function search_to_xml($pns, $name_key, $year_key) {
+function search_to_xml($pns, $name_key, $year_key, $src_key, $ftype_key) {
 
     $t = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
        . "<search-results system=\"CHGIS - Harvard University and Fudan University\""
@@ -155,10 +161,10 @@ function search_to_xml($pns, $name_key, $year_key) {
 
     foreach($pns as $pn) {
        $t .= "    <placename sys_id=\"" . $pn['sys_id'] . "\">\n"
-           . "      <uri>" . 'http://chgis.hmdc.harvard.edu/placename/' . $pn['sys_id'] . "</uri>\n"
+           . "      <uri>" . BASE_URL . '/placename/' . $pn['sys_id'] . "</uri>\n"
            . "      <name>" . $pn['name'] . "</name>\n"
            . "      <transcription>" . $pn['transcription'] . "</transcription>\n"
-           . "      <years>" . $pn['beg_yr'] . " ~ " . $pn['end_yr'] . "</years>\n";
+           . "      <years><begin>" . $pn['beg_yr'] . "</begin><end>" . $pn['end_yr'] . "</end></years>\n";
 
            if ($pn['parent sys_id'] == null) {
              $t .= "      <parent />\n";
@@ -168,6 +174,7 @@ function search_to_xml($pns, $name_key, $year_key) {
            }
 
            $t .= "      <feature-type>" . $pn['ftype_vn'] . " (" . $pn['ftype_tr'] . ")</feature-type>\n"
+           . "          <xy-coordinates><x>" . $pn['x_coord'] . "</x><y>" . $pn['y_coord'] ."</y></xy-coordinates>\n"
            . "      <data-source>" . $pn['data_src'] . "</data-source>\n"
            . "    </placename>\n";
     }

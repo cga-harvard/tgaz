@@ -1,7 +1,6 @@
 <?php
 
 /*
- *   For increased efficiency, consider switching to prepared statements
  *
  */
 
@@ -33,7 +32,9 @@
      'parent_id'                         'parent_tr'
 
   precbys:
-     'id'
+     'id'              'pb_sys_id'       'pb_vn'
+     '        '                          'pb_tr'
+
 
 
   preslocs:
@@ -49,6 +50,8 @@ function get_placename($conn, $fmt, $sys_id) {
 
   //FIXME - explicitly list fields,
   //      - use  SQL 'coalesce' to replace possible nulls or do this in PHP
+
+//$stmt = $mysqli->stmt_init();
 
   $pn_query = "SELECT * FROM v_placename WHERE sys_id = ?;";  //'$sys_id'
 
@@ -68,13 +71,31 @@ function get_placename($conn, $fmt, $sys_id) {
      return;
   }
 
+// get_result doesn't work on HMDC setup due to omitted mysqlnd ("native driver")
+// work around is to use bind + fetch
+/*
   $pn_result = $stmt->get_result();
   $pn = mysqli_fetch_array($pn_result, MYSQLI_ASSOC);
-  mysqli_free_result($pn_result);
+*/
 
-  if (count($pn) == 0) {
+  $md = $stmt->result_metadata();
+  $params = array();
+  $pn = array();
+
+  while($field = $md->fetch_field()) {
+      $params[] = &$pn[$field->name];
+  }
+
+  call_user_func_array(array($stmt, 'bind_result'), $params);
+  $stmt->fetch();
+
+  //mysqli_free_result($pn_result);
+  $stmt->close();
+
+  if ($pn['sys_id'] == null) {
     tlog(E_NOTICE, "No placename found for id: " . $sys_id);
-    alt_response(404, "No placename found for id: " . $sys_id);  //will exit here
+    alt_response(404, "CHGIS:  No placename found for id: " . $sys_id);  //will exit here
+    return;
   }
 
   $pn['self_uri'] = 'http://chgis.harvard.edu/placename/' . $pn['sys_id'];
@@ -131,7 +152,16 @@ function get_deps($conn, $query) {
   return $deps;
 }
 
+/*
+ *  json_encode for pre php 5.4 is missing flags to deliver unescaped unicode, escape slashes and pretty print
+ *  workarounds with json_encode and related versions (PEAR) fail to render Chinese characters correctly
+ *  so this function emits json the old-fashioned way which also solves the problem with "null" output
+ */
 function to_json($pn, $spellings, $partofs, $precbys, $preslocs) {
+
+    $jt = "{\n";
+    $indent = '  ';
+    $d = 0;          //depth of indent
 
     $sp_json = array();  //indexed
     foreach ($spellings as $sp) {
@@ -180,82 +210,137 @@ function to_json($pn, $spellings, $partofs, $precbys, $preslocs) {
         );
     }
 
-    $pn_json = array(
-      'system'              => 'China Historical GIS, Harvard University and Fudan University',
-      'license'             => 'c. 2014',
-      'uri'                 => 'http://chgis.harvard.edu/placename/' . $pn['sys_id'],
-      'sys_id'              => $pn['sys_id'],
-      'sys_id of alternate' => $pn['alt_of_id'],
+    $jt .= jline('system', 'China Historical GIS, Harvard University and Fudan University', 0)
+        .  jline('license', 'c. 2014', 0)
+        .  jline('uri', BASE_URL . '/placename/' . $pn['sys_id'], 0)
+        .  jline('sys_id', $pn['sys_id'], 0)
+        .  jline('sys_id of alternate', $pn['alt_of_id'], 0)
 
-      'spellings'           => $sp_json,
+        .  jarray('spellings', $sp_json, 0)
 
-      'feature_type' => array(
-        'name'            => $pn['ftype_vn'],
-        'alternate name'  => $pn['ftype_alt'],
-        'transcription'   => $pn['ftype_tr'],
-        'English'         => $pn['ftype_en']
-      ),
+        .  $indent . "\"feature_type\" : {\n"
+        .  jline('name', $pn['ftype_vn'], 1)
+        .  jline('alternate name', $pn['ftype_alt'], 1)
+        .  jline('transcription', $pn['ftype_tr'], 1)
+        .  jline('English', $pn['ftype_en'], 1, true)
+        .  $indent . "},\n"
 
-      'temporal' => array(
-        'years' => $pn['beg_yr'] . " - " . $pn['end_yr'],
-        'begin/end_rules' => $pn['beg_rule_id'] . " - " . $pn['end_rule_id']
-      ),
+        .  $indent . "\"temporal\" : {\n"
+        .  jline('years', $pn['beg_yr'] . " - " . $pn['end_yr'], 1)
+        .  jline('begin/end_rules', $pn['beg_rule_id'] . " - " . $pn['end_rule_id'], 1, true)
+        .  $indent . "},\n"
 
-      'spatial' => array(
-        'object_type' => $pn['obj_type'],
-        'xy_type'     => $pn['xy_type'],
-        'latitude'    => $pn['y_coord'],
-        'longitude'   => $pn['x_coord'],
-        'source'      => $pn['geo_src'],
-        'present_location' => $ploc_json
+        .  $indent . "\"spatial\" : {\n"
+        .  jline('object_type',      $pn['obj_type'], 1)
+        .  jline('xy_type',          $pn['xy_type'], 1)
+        .  jline('latitude',         $pn['y_coord'], 1)
+        .  jline('longitude',        $pn['x_coord'], 1)
+        .  jline('source',           $pn['geo_src'], 1)
+        .  jarray('present_location', $ploc_json, 1, true)
         //present_jurisdiction
-      ),
+        .  $indent . "},\n"
 
-      'historical context' => array(
-         'part of'      => $po_json,
-         'preceded by'  => $pb_json
-      ),
+        .  $indent . "\"historical_context\" : {\n"
+        .  jarray('part of',         $po_json, 1)
+        .  jarray('preceded by',     $pb_json, 1, true)
+        .  $indent . "},\n"
 
 
-      'data source'   => $pn['data_src'],
-      'source note'   => $pn['snote_text']
-  );
+        .  jline('data source',     $pn['data_src'], 0)
+        .  jline('source note',     $pn['snote_text'], 0, true)
+        . "}";
 
   header('Content-Type: text/json; charset=utf-8');
-  echo json_encode($pn_json, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT );
+  echo $jt;
+}
+
+//json line for single key/value
+function jline($n, $v, $d, $last = false) {
+  $s =  str_repeat('  ', $d) . "  \"$n\" : \"$v\"";
+  if ($last) {
+    $s .= "\n";
+  } else {
+    $s .= ",\n";
+  }
+  return $s;
+}
+
+// json: for array of associative arrays
+function jarray($n, $a, $d, $last = false) {
+  $s = str_repeat('  ', $d) . "  \"$n\" : [\n";
+  $posa = 0;
+
+  foreach ($a as $item) {
+    $s .= str_repeat('  ', $d + 2) . "{\n";
+    $posi = 0;
+    foreach ($item as $key => $val) {
+      $s .= str_repeat('  ', $d + 3) . "\"$key\" : \"$val\"";
+      if (++$posi < count($item)) {
+        $s .=  ",\n";
+      } else {
+        $s .= "\n";
+      }
+    }
+    $s .= str_repeat('  ', $d + 2) . "}";
+    if (++$posa < count($a)) {
+        $s .=  ",\n";
+    } else {
+        $s .= "\n";
+    }
+  }
+
+  $s .= str_repeat('  ', $d + 1) . "]";
+  if ($last) {
+    $s .= "\n";
+  } else {
+    $s .= ",\n";
+  }
+
+  return $s;
 }
 
 // file format the same for one or multiples - array of one or many
 //
 function to_geojson($pn, $spellings) {
 
-  $geo_types = array( 'POINT' => 'Point', 'POLYGON' => 'Polygon', 'LINE' => 'LineString');
+    $geo_types = array( 'POINT' => 'Point', 'POLYGON' => 'Polygon', 'LINE' => 'LineString');
 
-  $pn_json = array(
-      'type'                => 'FeatureCollection',
-      'features'            =>  array(               // indexed, container for multiples
-                                array(
-        'type'              => 'Feature',
-        'geometry'          => array(
-          'type'            =>  $geo_types[$pn['obj_type']],             // FIXME - or xy_type?
-          'coordinates'     =>  array ($pn['y_coord'], $pn['x_coord']), // FIXME - polygon or line data ?
-         ),
-         'properties'       => array(
-           'uri'            => 'http://chgis.harvard.edu/placename/' . $pn['sys_id'],
-           'sys_id'         => $pn['sys_id'],
+    $jt = "{\n";
+    $indent = '  ';
+    $d = 0;          //depth of tree
+
+    $jt .= jline('type', 'FeatureCollection', 0)
+        .  str_repeat($indent, 1) . "\"features\" : [\n"
+        .  str_repeat($indent, 2) . "{\n"
+        .  jline('type', 'Feature', 2)
+        .  str_repeat($indent, 3) . "\"geometry\" : {\n"
+        .  jline('type',  $geo_types[$pn['obj_type']], 3)                               // FIXME - or xy_type?
+        .  jline('coordinates', "{ " . $pn['y_coord'] . ", " . $pn['x_coord'] . "}", 3) // FIXME - polygon or line data ?
+        .  str_repeat($indent, 3) . "}\n"
+
+        .  str_repeat($indent, 3) . "\"properties\" : {\n"
+
+        .  jline('uri', 'http://chgis.harvard.edu/placename/' . $pn['sys_id'], 3)
+        .  jline('sys_id', $pn['sys_id'], 3)
 
            //   'spellings'
-           'script name'      =>  $pn['sp_script_form'],
-           'transcribed name' => $pn['sp_transcribed_form'],
+        .  jline('script name', $pn['sp_script_form'], 3)
+        .  jline('transcribed name', $pn['sp_transcribed_form'], 3)
 
-           'feature type'     => $pn['ftype_en'],
-           'years'            => $pn['beg_yr'] . ' - ' . $pn['end_yr']
-         )
-      ))
-  );
+        .  jline('feature type',  $pn['ftype_en'], 3)
+        .  jline('years',         $pn['beg_yr'] . ' - ' . $pn['end_yr'], 3)
+        .  str_repeat($indent, 3) . "}\n"  //end properties
+
+        .  str_repeat($indent, 2) . "}\n"  //end feature
+        .  str_repeat($indent, 1) . "]\n"  //end features
+        . "}";
 
   header('Content-Type: text/json; charset=utf-8');
-  echo json_encode($pn_json, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT );
+//  echo json_encode($pn_json); //, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT );
+
+
+  echo $jt;
+
 }
 
 function to_xml($pn, $spellings, $partofs, $preslocs) {
@@ -267,7 +352,7 @@ function to_xml($pn, $spellings, $partofs, $preslocs) {
   echo '  <system>China Historical GIS, Harvard University and Fudan University</system>';
   echo '  <license>c. 2014</license>';
 
-  echo '  <uri>http://chgis.harvard.edu/placename/' . $pn['sys_id'] . '</uri>';
+  echo '  <uri>' . BASE_URL . '/placename/' . $pn['sys_id'] . '</uri>';
 
   echo ' <spellings>';
   foreach($spellings as $sp) {
