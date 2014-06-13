@@ -38,7 +38,7 @@ LEFT JOIN (
 WHERE sp_vn.default_per_type = 1 AND sp_vn.script_id > 0
 AND sp_tr.default_per_type = 1 AND sp_tr.trsys_id != 'na';
 
--- remove one of any duplicates where parent begin year is repeated
+-- remove any duplicates where parent begin year is repeated
 
 DELETE mv_pn_srch
 FROM mv_pn_srch
@@ -48,7 +48,7 @@ JOIN (
 ) as kprows ON (mv_pn_srch.id = kprows.rid)
 WHERE mv_pn_srch.counter_id != kprows.counter_id;
 
--- add the index
+-- add the index, this will fail if duplicate pn.id are present
 
 ALTER TABLE mv_pn_srch add PRIMARY KEY(id);
 

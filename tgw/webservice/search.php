@@ -1,7 +1,5 @@
 <?php
 
-include ("./elroy.inc");
-
 define('MAX_SEARCH_HITS', 200);
 define('FIXED_KEY_CHAR','$');
 
@@ -106,7 +104,7 @@ function search_placename($conn, $name_key, $year_key, $fmt = 'json', $src_key, 
 function search_to_json($pns, $name_key, $year_key, $src_key, $ftype_key) {
 
     //reformat field display for json
-    $pns_json = [];
+    $pns_json = array();
 
     foreach($pns as $pn) {
 

@@ -68,10 +68,12 @@ class BindParam{
 
     public function get(){
       $arr =  array_merge(array($this->types), $this->values);
-      $refs = [];
+
       // convert to references for PHP 5.3, unnecessary in prior versions
-      foreach($arr as $key => $value) {
-        $refs[$key] = &$arr[$key];
+      $refs = array();
+      $c = count($arr);
+      for ($i = 0; $i < $c; $i++) {
+        $refs[$i] =  &$arr[$i];
       }
       return $refs;
     }
