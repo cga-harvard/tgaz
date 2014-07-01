@@ -2,10 +2,10 @@
 
 
 /*
- *  FIXME - add config item to turn on/off logging
+ *  
  */
 function tlog($logtype, $msg) {
-  if (1) {
+  if (LOGGING) {
     $line  = "[ " . date('c') . " ] ";
 
     switch($logtype) {

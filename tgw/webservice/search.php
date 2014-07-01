@@ -1,13 +1,16 @@
 <?php
 
 define('MAX_SEARCH_HITS', 200);
+define('HTML_SEARCH_HITS', 8);
 define('FIXED_KEY_CHAR','$');
 
+
 /*
- *
- *
+ *  Note that the handling of the extraction and display of the earliest parent is from the materialized view
+ *  while the search facet for parent is through an optional join of the part_of table.  To keep these separate
+ *  the variables for the former use 'parent' while the later use 'pof'
  */
-function search_placename($conn, $name_key, $year_key, $fmt = 'json', $src_key, $ftype_key) {
+function search_placename($conn, $name_key, $year_key, $fmt, $src_key, $ftype_key, $pof_key, $pg_key) {
 
   if(substr_compare($name_key, '$', -1, 1) === 0) {   //test for last char '$' to indicate no wildcard
     $name_key = substr($name_key, 0, -1);
@@ -15,11 +18,20 @@ function search_placename($conn, $name_key, $year_key, $fmt = 'json', $src_key, 
     $name_key = $name_key . '%';
   }
 
-  $query = "SELECT pn.sys_id, pn.data_src, pn.name, pn.transcription, pn.beg_yr, pn.end_yr, " .
+  if ($pof_key) {
+    $query = "SELECT SQL_CALC_FOUND_ROWS DISTINCT pn.sys_id, pn.data_src, pn.name, pn.transcription, pn.beg_yr, pn.end_yr, " .
+      "pn.ftype_vn, pn.ftype_tr, pn.x_coord, pn.y_coord, " .
+      "pn.parent_sys_id 'parent sys_id', pn.parent_vn 'parent name', pn.parent_tr 'parent transcription' " .
+      "FROM mv_pn_srch pn JOIN spelling sp ON (sp.placename_id = pn.id) " .
+      "JOIN part_of pof ON (pof.child_id = pn.id) JOIN spelling spp ON (spp.placename_id = pof.parent_id) " .
+      "WHERE sp.written_form LIKE ? ";
+  } else {
+    $query = "SELECT  SQL_CALC_FOUND_ROWS DISTINCT pn.sys_id, pn.data_src, pn.name, pn.transcription, pn.beg_yr, pn.end_yr, " .
       "pn.ftype_vn, pn.ftype_tr, pn.x_coord, pn.y_coord, " .
       "pn.parent_sys_id 'parent sys_id', pn.parent_vn 'parent name', pn.parent_tr 'parent transcription' " .
       "FROM mv_pn_srch pn JOIN spelling sp ON (sp.placename_id = pn.id) " .
       "WHERE sp.written_form LIKE ? ";
+  }
 
   $bindParam = new BindParam();  // in tgaz_lib
   $bindParam->add('s', $name_key);
@@ -43,7 +55,20 @@ function search_placename($conn, $name_key, $year_key, $fmt = 'json', $src_key, 
       $query .= "AND (pn.ftype_vn = ? OR pn.ftype_tr = ?) ";
   }
 
-  $query .=    "ORDER BY pn.transcription, pn.sys_id limit " . MAX_SEARCH_HITS . ";";
+  if ($pof_key != null) {
+      $pof_key = $pof_key . '%';
+      $bindParam->add('s', $pof_key);
+      $query .= "AND spp.written_form LIKE ? ";
+  }
+
+  $query .=  "ORDER BY pn.transcription, pn.beg_yr ";
+
+  if ($fmt == 'html') {
+      $query .=  "limit ? , " . HTML_SEARCH_HITS . ";";
+      $bindParam->add('i', $st_key);
+  } else {
+      $query .=  "limit " . MAX_SEARCH_HITS . ";";
+  }
 
   if (!$stmt = $conn->prepare($query)) {
       tlog(E_ERROR, "mysqli prepare failure: " . $conn->error);
@@ -58,10 +83,11 @@ function search_placename($conn, $name_key, $year_key, $fmt = 'json', $src_key, 
   }
 
   if (!$stmt->execute()) {
-     tlog("mysqli statement execute failed: (" . $stmt->errno . " - " . $stmt->error);
+     tlog(E_ERROR, "mysqli statement execute failure: " . $stmt->errno . " - " . $stmt->error);
      alt_response(500);
      return;
-  } else {
+  }
+
     // workaround for lack of access to stmt->get_result method
     $pns = array();  //indexed
 
@@ -87,21 +113,35 @@ function search_placename($conn, $name_key, $year_key, $fmt = 'json', $src_key, 
 
     $stmt->close();
 
+    // get total results (for query without limit)
+    $pn_total = 0;  // this will be the total for the query without the limit
+    if (!$stmt = $conn->prepare("SELECT FOUND_ROWS()")) {
+        tlog(E_ERROR, "total rows prepare statement failed");
+    } else {
+      if (!$stmt->execute()) {
+        tlog(E_ERROR, "total rows query exception: " . $stmt->errno . " - " . $stmt->error);
+      } else {
+        $stmt->bind_result($pn_total);
+        $stmt->fetch();
+        $stmt->close();
+      }
+    }
+
     switch($fmt) {
       case 'json':
-        search_to_json($pns, $name_key, $year_key, $src_key, $ftype_key); break;
-//      case 'html':
-//        search_to_html($pns, $name_key, $year_key); break;
+        search_to_json($pns, $name_key, $year_key, $src_key, $ftype_key, $pof_key, $pn_total); break;
+      case 'html':
+        search_to_html($pns, $name_key, $year_key, $src_key, $ftype_key, $pof_key, $pg_key, $pn_total); break;
       case 'xml':
-        search_to_xml($pns, $name_key, $year_key, $src_key, $ftype_key); break;
+        search_to_xml($pns, $name_key, $year_key, $src_key, $ftype_key, $pof_key, $pn_total); break;
       default:
         tlog(E_WARNING, "Invalid fmt type: " . $fmt);
         //FIXME - output?? shouldn't really get here
     }
-  }
+
 }
 
-function search_to_json($pns, $name_key, $year_key, $src_key, $ftype_key) {
+function search_to_json($pns, $name_key, $year_key, $src_key, $ftype_key, $pof_key, $total) {
 
     //reformat field display for json
     $pns_json = array();
@@ -137,22 +177,23 @@ function search_to_json($pns, $name_key, $year_key, $src_key, $ftype_key) {
         . ( $year_key ? " and year '$year_key'" : "")
         . ( $src_key ? " and data source '$src_key'" : "")
         . ( $ftype_key ? " and feature type '$ftype_key'" : "")
+        . ( $pof_key ? " and parent '$pof_key'" : "")
         . ( (count($pns) >= MAX_SEARCH_HITS) ? '  Returned more than the maximum. Please refine your search.' : ''), 1)
-        .  jline('count', count($pns), 1)
-//        .  $indent . "\"hits\" : [\n"
+        .  jline('count of displayed results', count($pns), 1)
+        .  jline('count of total results', $total, 1)
         .  jarray('placenames', $pns_json, 1, true)
-//        .  $indent . "},\n"
         . "}";
 
     header('Content-Type: text/json; charset=utf-8');
     echo $jt;
 }
 
-function search_to_xml($pns, $name_key, $year_key, $src_key, $ftype_key) {
+function search_to_xml($pns, $name_key, $year_key, $src_key, $ftype_key, $pof_key, $total) {
 
     $t = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
        . "<search-results system=\"CHGIS - Harvard University and Fudan University\""
-       . " count=\"" . count($pns) . "\">\n"
+       . " count-displayed=\"" . count($pns) . "\""
+       . " count-total=\"" . $total . "\">\n"
 
        . "  <placenames>\n"
        . ((count($pns) >= MAX_SEARCH_HITS) ? "    <memo>Returned more than the maximum. Please refine your search.</memo>\n" : "");
