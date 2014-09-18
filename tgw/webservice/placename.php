@@ -56,7 +56,7 @@ function get_placename($conn, $fmt, $sys_id) {
   $pn_query = "SELECT * FROM v_placename WHERE sys_id = ?;";  //'$sys_id'
 
   if (!$stmt = $conn->prepare($pn_query)) {
-      tlog(E_ERROR, "mysqli prepare failure: " . mysqli_error());
+      tlog(E_ERROR, "mysqli prepare failure: " . $conn->error);
       alt_response(500);
   }
 

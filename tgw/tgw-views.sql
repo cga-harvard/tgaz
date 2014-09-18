@@ -6,7 +6,8 @@ FROM (placename pn JOIN ftype ON pn.ftype_id = ftype.id)
 LEFT JOIN snote ON pn.snote_id = snote.id;
 
 CREATE OR REPLACE VIEW v_spelling AS
-SELECT sp.*, script.name script, script.default_per_lang script_def, trsys.name trsys
+SELECT sp.*, script.name script, script.default_per_lang script_def,
+       script.lang, trsys.name trsys
 FROM spelling sp, script, trsys
 WHERE sp.script_id = script.id AND sp.trsys_id = trsys.id;
 

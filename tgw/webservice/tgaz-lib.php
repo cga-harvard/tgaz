@@ -2,7 +2,7 @@
 
 
 /*
- *  
+ *
  */
 function tlog($logtype, $msg) {
   if (LOGGING) {
@@ -30,18 +30,23 @@ function tlog($logtype, $msg) {
 /*
  *   response pages for exceptional conditions,
  *   e.g. not found
+ *
+ *   the method http_response_code() requires php version >= 5.4
+ *   alternative is to use header method
+ *
+ *
  */
 function alt_response($http_code, $msg = null) {
 
   switch($http_code) {
     case 404 :
-        http_response_code(404);
+//        http_response_code(404);  // must be php version >= 5.4
         echo "<h1>404 Not Found</h1>";
         if (!$msg) { $msg = "The page that you have requested could not be found."; }
         echo "<p>$msg</p>";
         break;
     case 500 :
-        http_response_code(500);
+//        http_response_code(500);  // must be php version >= 5.4
         echo "<h1>500 Internal Server Error</h1>";
         if (!$msg) { $msg = "The server encountered an unexpected condition which prevented it from fulfilling the request."; }
         echo "<p>$msg</p>";

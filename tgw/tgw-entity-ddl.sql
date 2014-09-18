@@ -69,6 +69,7 @@ CREATE TABLE spelling (
   default_per_type          TINYINT NOT NULL DEFAULT 0,    -- 0/1 boolean,
   attested_by               VARCHAR(128),
   note                      VARCHAR(512),
+  -- add 'uri' per conversation 7/16
 
   PRIMARY KEY (id),
   INDEX sp_pn_idx (placename_id),
