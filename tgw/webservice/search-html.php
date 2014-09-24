@@ -1,6 +1,8 @@
 <?php
 
 // THIS IS JUST A PLACEHOLDER, BUT WITH A PROTYPE FOR PAGINATION
+// git connection testing line 2014-09-24 as user ska
+
 
 function search_to_html($pns, $name_key, $year_key, $src_key, $ftyp_key, $pof_key, $pg, $total) {
 
