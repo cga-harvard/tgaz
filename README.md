@@ -2,6 +2,20 @@
 
 Temporal Gazetteer Data Architecture for the CHGIS data model
 
+##TGW
+
+###Table definitions 
+
+see .ddl files for MariaDB
+
+###Migration from CHGIS V3
+
+see the Schemas section below for the normalization of V3 to TGAZ
+
+###Webservice
+
+The API is written in .php and contains a few wrapping pages for examples, graphics and basic .css.
+
 ## Schemas
 
 ### CHGIS3 DDL for MySQL

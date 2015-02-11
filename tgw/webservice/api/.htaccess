@@ -1,0 +1,15 @@
+AddDefaultCharset UTF-8
+AddCharset UTF-8 .json
+AddCharset UTF-8 .xml
+AddCharset UTF-8 .html
+AddCharset UTF-8 .css
+AddCharset UTF-8 .php
+
+Options +FollowSymLinks
+Options +Indexes
+RewriteEngine on
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ tgaz.php/$1 [L]
+# RewriteRule ^/?(.*)$ name_parent.php?name=$1 [QSA,L]
+

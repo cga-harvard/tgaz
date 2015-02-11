@@ -2,7 +2,6 @@
 
 // consider supporting different languages
 function get_service_info_json($conn) {
-
   $pn_query = "SELECT count(*) as count from placename;";
   $pn_result = mysqli_query($conn, $pn_query) or die("{ \"Error\" : \"" . mysqli_error() . "\"}");   //FIX ME
   $pn = mysqli_fetch_array($pn_result, MYSQLI_ASSOC);
@@ -24,8 +23,7 @@ function get_service_info_json($conn) {
   );
 
   header('Content-Type: text/json; charset=utf-8');
-  echo json_encode($sinfo, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT );
-
+  echo json_encode($sinfo);  //, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT );
 }
 
 ?>

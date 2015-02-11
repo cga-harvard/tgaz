@@ -20,7 +20,7 @@ INSERT INTO data_src VALUES ('RAS', 'Russian Academy of Sciences', NULL, NULL, '
 INSERT INTO data_src VALUES ('TBRC', 'Tibetan Buddhist Resource Center', '', 'http://www.tbrc.org', NULL);
 INSERT INTO data_src VALUES ('DDBC', 'Dharma Drum Buddhist College', '', 'http://authority.ddbc.edu.tw/place/', NULL);
 INSERT INTO data_src VALUES ('CBDB', 'China Biographical Database', '', 'http://isites.harvard.edu/icb/icb.do?keyword=k16229', NULL);
-
+INSERT INTO data_src VALUES ('HGR', 'Historical Gazetteer of Russia', 'Fung Library, Davis Center for Russian and Eurasian Studies, Harvard', 'https://github.com/jaguillette/fungHGR/', NULL);
 -- data rules to show level of accuracy in ascribed dates in placenames
 --
 CREATE TABLE IF NOT EXISTS drule (
@@ -101,6 +101,7 @@ INSERT INTO trsys VALUES ('na', 'n/a', 'xx', '', NULL);
 INSERT INTO trsys VALUES ('py', 'Pinyin', 'zh', 'Mandarin', NULL);
 INSERT INTO trsys VALUES ('wg', 'Wade-Giles', 'zh', 'Mandarin', NULL);
 INSERT INTO trsys VALUES ('rj', 'Romaji', 'ja', '', NULL);
+INSERT INTO trsys VALUES ('ru_iso', 'Russian ISO-1995', 'ru', '', NULL);
 --INSERT INTO trsys VALUES ('');
 --INSERT INTO trsys VALUES ('');
 --INSERT INTO trsys VALUES ('');
@@ -152,7 +153,7 @@ CREATE TABLE IF NOT EXISTS snote (
   src_note_ref                 VARCHAR(32),       -- a 5 digit number, sometimes prefixed with 'relig_'
                                                   -- prev: note_id
                                                   -- UNIQUE ??
-  source                       ENUM('Fudan', 'Wikipedia'),
+  source                       ENUM('Fudan', 'HGRussia', 'Wikipedia'),
   compiler                     VARCHAR(64),          -- person's name, prev: nts_comp
 
   lang                         VARCHAR(8),           -- ISO 2 char code

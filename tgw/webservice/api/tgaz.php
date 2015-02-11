@@ -1,11 +1,11 @@
 <?php
-require ("../../polyphony.inc");
+require ("../../CONNECTION_INFO.inc");
 require ("./tgaz-lib.php");
 require ("./placename.php");
 #require ("./featuretype.php");
 require ("./service-info.php");
 require ("./search.php");
-require ("./search-html.php");
+require ("./search_html.php");
 
 // use persistent connection with "p:" prepended to the hostname
 // echo "$db_addr $db_user<hr>";
@@ -46,11 +46,10 @@ if (isset($path_parts[3])) {
 
 // echo "<hr>$service";
 
-    $fmt = "xml";  //default
+    $fmt = "html";  //default
 
     if (isset($path_parts[4])) {
-      if ($path_parts[4] == 'json' || $path_parts[4] == 'xml' 
-           || $path_parts[4] == 'rdf' || $path_parts[4] == 'html') {
+      if ($path_parts[4] == 'json' || $path_parts[4] == 'xml' || $path_parts[4] == 'rdf' || $path_parts[4] == 'html') {
         get_placename($conn, $path_parts[4], $path_parts[5]);  // FIXME verify exists
       } else {
         get_placename($conn, $fmt, $path_parts[4]);
@@ -67,14 +66,16 @@ if (isset($path_parts[3])) {
         $yr  = (isset($_GET["yr"]) ? $_GET["yr"] : null);
         $src = (isset($_GET["src"]) ? $_GET["src"] : null);
         $ftyp = (isset($_GET["ftyp"]) ? $_GET["ftyp"] : null);
+//  altered for pagination 2014-10-09
+//  ok this must be the trouble
+//  indeed the 
         $p = (isset($_GET["p"]) ? $_GET["p"] : null);
+        $t = (isset($_GET["total"]) ? $_GET["total"] : null);
         $pg = 0;
-
         if ($fmt == 'html') {
             $pg = (isset($_GET["pg"]) ? $_GET["pg"] : 1);
         }
-        search_placename($conn, $n, $yr, $fmt, $src, $ftyp, $p, $pg);
-
+        search_placename($conn, $n, $yr, $fmt, $src, $ftyp, $p, $pg, $t);
       } else {
         mysqli_close($conn);
         tlog(E_ERROR, "Invalid request: " . $url_path);

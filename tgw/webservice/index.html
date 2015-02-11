@@ -1,0 +1,172 @@
+<!--Force IE6 into quirks mode with this comment tag-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Temporal Gazetteer</title>
+ <link rel="icon" href="graf/tgaz.ico">
+ <link rel='stylesheet' type='text/css'  href='css/tgaz3.css'>
+</head>
+
+<body>
+
+<div id="nav">
+ <div class="innertube">
+  <a href="index.html"  title="Temporal Gazetteer Home Page"><img src="graf/TGAZ_API_icon.png"></a>
+     <!-- nav section -->
+    <p><a href="#intro"><b>intro</b></a><br>
+    <p><a href="#usage"><b>usage</b></a><br>
+    <p><a href="#examples"><b>examples</b></a><br>
+    <p><a href="credits.html"  title="Credits & Contributors"><b>credits</b></a><p />
+    <p><a href="http://gis.harvard.edu/" title="Center for Geographic Analysis"><b>cga</b></a>
+ </div>
+</div>
+
+<div id="banner">
+<div class="innertube">
+ :: home
+</div>
+</div>
+
+
+<div id="mainbox">
+ <div class="innertube"> 
+
+   <div class="header">
+    <table border=0 cellspacing=0 cellpadding=2 width=330>
+     <tr>
+       <td>The Temporal Gazetteer API is a webservice for querying historical placenames.</td>
+     </tr>
+    </table>   
+   </div> 
+   <!-- close header -->
+
+   <div class="content">
+         <a name="intro"></a>
+
+      <h2 id="intro">Introduction</h2>
+      <p><strong>TGAZ API</strong> - is a read-only interface designed to search the contents of the <a href="http://www.fas.harvard.edu/~chgis/">China Historical GIS</a> placename database.  The TGAZ system architecture -- based loosely on the CHGIS XML API (2006) -- has been normalized and made more generic in order to integrate multiple data sources, and to allow for vernacular spellings or transcription methods in many languages. 
+<p>This interface accepts queries for placenames in UTF-8 encoded strings or glyphs (for example, Chinese Simplified or Complex characters).  Each placename recorded in the database is referred to as a <i>spelling</i>.  A brief look at the project in diagrams (<a href="docs/TemporalGazetteer_Slides_20140501.pdf" target="_new">PDF</a>).
+
+      <p><p>
+
+      <a name="usage"></a>
+
+      <h2 id="intro">Usage</h2>
+      <p>The TGAZ web service is designed to receive <a href="http://en.wikipedia.org/wiki/Representational_State_Transfer" target="_new">RESTful URIs</a> containing query values, and to return the results in XML format by default.  The interface is READ-ONLY and currently provides two functions:
+
+      <ol>
+       <li><strong>Canonical Placename Search</strong>
+        <br>method ->  http://140.247.114.125/placename/UNIQUE_ID</li>
+        <p>
+       <li><strong>Faceted Search</strong>
+        <br>method ->  http://140.247.114.125/placename?QUERY_PARAMETER=VALUE</li>
+        <p>  
+      </ol>
+
+      <p>Instructions:
+     <ol>
+      <li><u>Canonical Placename Records</u> - replace UNIQUE_ID with the unique placename ID to be searched. 
+(The IDs being used are being minted for the TGAZ database with the prefix <strong>hvd_</strong>.  For example, the IDs listed in the <a href="http://www.fas.harvard.edu/~chgis/data/chgis/downloads/v4/datasets/index.html">CHGIS data layers</a> would have the prefix added, such as CHGIS ID 32180 = TGAZ ID hvd_32180). </li>
+      <p />
+      <li><u>Faceted Search</u> - allows for a combinated of query parameters to be searched.   A PLACENAME, YEAR, FEATURE TYPE, DATA SOURCE, and IMMEDIATE PARENT can be sent in the form of a query string, such as:  <strong>?n=mengla&yr=1820&ftyp=xian</strong>. Note:  the default output is XML, which can be reset using a FORMAT parameter, such as <strong>fmt=json</strong></li>
+     </ol>
+     <p>
+
+Blank spaces are accepted in the PLACENAME, FEATURE TYPE, IMMEDIATE PARENT values.  Chinese Characters should be sent as plain UTF-8 encodings, not URLencoded hexadecimal strings.
+
+Note: for historical records the valid years of the database are -222 to 1911.  
+
+      <p><p>
+
+     <a name="examples"></a>
+      <h2 id="intro">Canonical Placename</h2>
+      <ul>
+       <li><a href="http://140.247.114.125/placename/hvd_32180" target="_new">http://140.247.114.125/placename/hvd_32180</a></li>
+      </ul>
+
+      <p><strong>Canonical Placename Formats</strong>
+      <ul>
+        <li><strong>json  </strong><a href="http://140.247.114.125/placename/json/hvd_80547" target="_new">http://140.247.114.125/placename/json/hvd_80547</a></li>
+        <li><strong>rdf  </strong><a href="http://140.247.114.125/placename/rdf/hvd_135744" target="_new">http://140.247.114.125/placename/rdf/hvd_135744</a></li>
+        <li><strong>html  </strong><a href="http://140.247.114.125/placename/html/hvd_9732" target="_new">http://140.247.114.125/placename/html/hvd_9732</a></li>
+        <li><strong>xml  </strong><a href="http://140.247.114.125/placename/xml/hvd_96066" target="_new">http://140.247.114.125/placename/xml/hvd_96066</a></li>
+               
+
+       </ul>
+
+     <p><p>
+      <h2 id="intro">Faceted Search</h2>
+      <p>parameters allowed:
+		<ul>
+	     <li><strong>n</strong>: name (the spelling of the placename)</li>
+	     <li><strong>yr</strong>: year of existence (the year during which the placename existed)</li>
+	     <li><strong>ftyp</strong>: feature type (the the feature type, or class of placename)</li>
+	     <li><strong>src</strong>: source (the spelling of the placename)</li>
+	     <li><strong>p</strong>: part of (the immediate parent jurisdiction where the place was located)</li>
+	     <li><strong>fmt</strong>: format (the output format returned: xml, json, html)</li>
+
+      <p><strong>Placename Examples</strong>
+      <ul>
+       <li><a href="http://140.247.114.125/placename?n=tianbian" target="_new">http://140.247.114.125/placename?n=Tianbian</a></li>
+       <li><a href="http://140.247.114.125/placename?n=晋阳" target="_new">http://140.247.114.125/placename?n=晋阳</a></li>
+      </ul>
+
+      <p><strong>Placename & Format Examples</strong>
+      <ul>
+       <li><a href="http://140.247.114.125/placename?fmt=json&n=滚弄" target="_new">http://140.247.114.125/placename?fmt=json&n=滚弄</a></li>
+       <li><a href="http://140.247.114.125/placename?fmt=html&n=Rui%27an%20Xian" target="_new">http://140.247.114.125/placename?fmt=html&n=Rui'an Xian</a></li>
+       <li><a href="http://140.247.114.125/placename?fmt=xml&n=温州" target="_new">http://140.247.114.125/placename?fmt=xml&n=温州</a></li>
+      </ul>
+
+      <p><strong>Placename & Year Examples</strong>
+      <ul>
+       <li><a href="http://140.247.114.125/placename?fmt=html&n=龍&yr=800" target="_new">http://140.247.114.125/placename?fmt=html&n=龍&yr=800</a></li>
+       <li><a href="http://140.247.114.125/placename?fmt=html&n=雙&yr=300" target="_new">http://140.247.114.125/placename?fmt=html&n=雙&yr=300</a></li>
+      </ul>
+
+      <p><strong>Placename & Feature Type Examples</strong>
+      <ul>
+       <li><a href="http://140.247.114.125/placename?fmt=html&n=meng&ftyp=州" target="_new">http://140.247.114.125/placename?fmt=html&n=meng&ftyp=州</a></li>
+       <li><a href="http://140.247.114.125/placename?fmt=html&n=鮑&ftyp=cun%20zhen" target="_new">http://140.247.114.125/placename?fmt=html&n=鮑&ftyp=cun zhen</a></li>
+      </ul>
+
+      <p><strong>Placename & Part-of Parent Unit Examples</strong>
+      <ul>
+       <li><a href="http://140.247.114.125/placename?fmt=html&n=茹&p=上谷郡" target="_new">http://140.247.114.125/placename?fmt=html&n=茹&p=上谷郡</a></li>
+       <li><a href="http://140.247.114.125/placename?fmt=html&n=盧溪&p=黔中" target="_new">http://140.247.114.125/placename?fmt=html&n=盧溪&p=黔中</a></li>
+      </ul>
+
+      <p><strong>Multi-Parameter Faceted Search Examples</strong>
+      <ul>
+       <li><a href="http://140.247.114.125/placename?fmt=html&n=庆&ftyp=xian&yr=1420&p=Chuzhou" target="_new">http://140.247.114.125/placename?fmt=html&n=庆&ftyp=xian&yr=1420&P=Chuzhou</a></li>
+      </ul>
+
+      <p><p>
+
+   </div> 
+   <!-- close content -->
+
+   <div class="footer">
+      <table border=0 cellspacing=0 cellpadding=2>
+       <tr>
+         <td> (c) 2014 <a href="http://www.dbr.nu/bio/" target="_new">Lex Berman</a> and <a href="http://www.nearity.com/" target="_new">Bill Hays</td>
+       </tr>
+      </table>
+   </div> 
+   <!-- close footer -->
+
+   <div class="innertube">    
+     <img src="graf/1000px_high.PNG">
+   </div> 
+   <!-- close innertube vertical spacer -->
+
+ </div>
+ <!-- close mainbox-innertube -->
+
+</div>
+<!-- close mainbox -->
+
+</body>
+</html>

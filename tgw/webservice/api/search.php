@@ -1,7 +1,7 @@
 <?php
 
 define('MAX_SEARCH_HITS', 200);
-define('HTML_SEARCH_HITS', 8);
+define('ITEMS_PER_PAGE', 50);
 define('FIXED_KEY_CHAR','$');
 
 
@@ -10,7 +10,9 @@ define('FIXED_KEY_CHAR','$');
  *  while the search facet for parent is through an optional join of the part_of table.  To keep these separate
  *  the variables for the former use 'parent' while the later use 'pof'
  */
-function search_placename($conn, $name_key, $year_key, $fmt, $src_key, $ftype_key, $pof_key, $pg_key) {
+
+// altered $st_key to $pg_key for pagination  2014-10-09  added $total at the end
+function search_placename($conn, $name_key, $year_key, $fmt, $src_key, $ftype_key, $pof_key, $pg, $total) {
 
   if(substr_compare($name_key, '$', -1, 1) === 0) {   //test for last char '$' to indicate no wildcard
     $name_key = substr($name_key, 0, -1);
@@ -63,12 +65,17 @@ function search_placename($conn, $name_key, $year_key, $fmt, $src_key, $ftype_ke
 
   $query .=  "ORDER BY pn.transcription, pn.beg_yr ";
 
+//  changing $st_key to $pg in order to catch num
+//  altered to fix limit start number
+
   if ($fmt == 'html') {
-      $query .=  "limit ? , " . HTML_SEARCH_HITS . ";";
-      $bindParam->add('i', $st_key);
+      $query .=  "limit ? , " . ITEMS_PER_PAGE . ";";
+      $start_limit = (($pg - 1)  *  ITEMS_PER_PAGE);
+      $bindParam->add('i', $start_limit);
   } else {
       $query .=  "limit " . MAX_SEARCH_HITS . ";";
   }
+
 
   if (!$stmt = $conn->prepare($query)) {
       tlog(E_ERROR, "mysqli prepare failure: " . $conn->error);
@@ -131,8 +138,8 @@ function search_placename($conn, $name_key, $year_key, $fmt, $src_key, $ftype_ke
       case 'json':
         search_to_json($pns, $name_key, $year_key, $src_key, $ftype_key, $pof_key, $pn_total); break;
       case 'html':
-        search_to_html($pns, $name_key, $year_key, $src_key, $ftype_key, $pof_key, $pg_key, $pn_total); break;
-      case 'xml':
+        search_to_html($pns, $name_key, $year_key, $src_key, $ftype_key, $pof_key, $pg, $pn_total); break;
+       case 'xml':
         search_to_xml($pns, $name_key, $year_key, $src_key, $ftype_key, $pof_key, $pn_total); break;
       default:
         tlog(E_WARNING, "Invalid fmt type: " . $fmt);
@@ -188,12 +195,20 @@ function search_to_json($pns, $name_key, $year_key, $src_key, $ftype_key, $pof_k
     echo $jt;
 }
 
-function search_to_xml($pns, $name_key, $year_key, $src_key, $ftype_key, $pof_key, $total) {
+
+function search_to_xml($pns, $name_key, $year_key, $src_key, $ftype_key, $pof_key, $total, $pg) {
+
+    $jcount = count($pns);
 
     $t = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+
+
        . "<search-results system=\"CHGIS - Harvard University and Fudan University\""
        . " count-displayed=\"" . count($pns) . "\""
        . " count-total=\"" . $total . "\">\n"
+
+       . "<stuff>\n count func: " . $jcount . " total var: " . $total . "</stuff>\n"
+
 
        . "  <placenames>\n"
        . ((count($pns) >= MAX_SEARCH_HITS) ? "    <memo>Returned more than the maximum. Please refine your search.</memo>\n" : "");

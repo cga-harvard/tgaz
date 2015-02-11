@@ -1,11 +1,11 @@
 <?php
 
-require ("../../elroy.inc");
+require ("../../polyphony.inc");
 require ("./tgaz-lib.php");
 
 echo "<br /> building paths ... ";
 
-$conn = mysqli_connect("p:$db_addr", "$db_user", "$db_pass", "$db_name", "$db_port");
+$conn = mysqli_connect("p:$db_addr", "$db_user", "$db_pass", "$db_name");
   if (!$conn) {
       die('Connect Error (' . mysqli_connect_errno() . ') ' . mysqli_connect_error());
   }

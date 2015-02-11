@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Leaflet-mySQL</title>
+<meta charset='utf-8' />
+<link rel='stylesheet' href='http://cdn.leafletjs.com/leaflet-0.7/leaflet.css'/>
+<script src='http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js'></script>
+<script src='http://cdn.leafletjs.com/leaflet-0.7/leaflet.js'></script>
+</head>
+<body>
+<div class="banner"><a href='/tgaz/'><img src='/tgaz/graf/TGAZ_API_icon.png'></a> :: search results : name=<b>Aleks</b></div><!-- end "banner" -->
+<div class="pages"><p>Results: 1-4 of 4 total &nbsp;&nbsp;</div><!-- end "pages" -->
+<div class="webmap_area"><div id="map" style="width: 600px; height: 260px"></div></div><!-- end "webmap_area" -->
+<script>
+var mapxy = [[49.01808, 39.17942, "<a href='http://chgis.hmdc.harvard.edu/placename/hgr_633'>Алексеевка Alekseevka (1785 to 1796)</a>"],[54.50503, 37.0674, "<a href='http://chgis.hmdc.harvard.edu/placename/hgr_353'>Алексин Aleksin (1785 to 1796)</a>"],[54.50503, 37.0674, "<a href='http://chgis.hmdc.harvard.edu/placename/hgr_82'>Алексинский уезд Aleksinskii uezd (1785 to 1796)</a>"],];
+var southWest = L.latLng(20, 78.58),
+    northEast = L.latLng(40, 130),
+    bounds = L.latLngBounds(southWest, northEast);
+
+var map = L.map('map').fitBounds(bounds);
+
+        mapLink = 
+            '<a href="http://www.esri.com/data/basemaps">Esri</a>';
+        L.tileLayer(
+            'http://server.arcgisonline.com/ArcGIS/rest/services/World_Shaded_Relief/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'basemap &copy;' + mapLink + ' code &raquo; <a href="http://www.dbr.nu/bio">Lex Berman</a>',
+            maxZoom: 18,
+            }).addTo(map);
+
+// changed L.Marker to L.circleMarker, added ,{def}
+
+var popup = L.popup();
+var marker, i
+for (i = 0; i < mapxy.length; i++){
+    var markerLocation = new L.LatLng(mapxy[i][0], mapxy[i][1]);
+    marker = new L.circleMarker(markerLocation, {
+                        radius: 6,
+                        fillColor: "#ffff00",
+                        color: "#ff0000",
+                        weight: 1,
+                        opacity: 1,
+                        fillOpacity: 0.8
+                    });
+    marker.bindPopup(mapxy[i][2], mapxy[i][3]);
+    marker.on('mouseover', function(e) {
+        popup.setLatLng(e.latlng)
+        this.openPopup();
+    });
+    map.addLayer(marker);
+};
+
+    </script><div class="results">   <dl class="pn"><a href="placename/hgr_633">hgr_633</a>
+    <dt class="pnt"></dt>
+      <dd class="pnd"></dd>
+Алексеевка (Alekseevka) begin 1785 CE end 1796 CE [39.17942, 49.01808]  </dl>
+  <dl class="pn"><a href="placename/hgr_353">hgr_353</a>
+    <dt class="pnt"></dt>
+      <dd class="pnd"></dd>
+Алексин (Aleksin) begin 1785 CE end 1796 CE [37.0674, 54.50503]  </dl>
+  <dl class="pn"><a href="placename/hgr_82">hgr_82</a>
+    <dt class="pnt"></dt>
+      <dd class="pnd"></dd>
+Алексинский уезд (Aleksinskii uezd) begin 1785 CE end 1796 CE [37.0674, 54.50503]  </dl>
+</div><!-- end "results" -->
+</body>
+</html>
