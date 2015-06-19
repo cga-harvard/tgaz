@@ -1,5 +1,5 @@
 <?php
-require ("../../CONNECTION_INFO.inc");
+require ("../../polyphony.inc");
 require ("./tgaz-lib.php");
 require ("./placename.php");
 #require ("./featuretype.php");

@@ -1,10 +1,6 @@
 <?php
 
 /*
- *
- */
-
-/*
   placename:
     'id'              'beg_yr'           'geo_src'
     'sys_id'          'beg_rule_id'      'added_on'
@@ -129,9 +125,9 @@ function get_placename($conn, $fmt, $sys_id) {
     case 'html':
       to_html($pn, $spellings, $partofs, $precbys, $preslocs); break;
     case 'xml':
-      to_xml($pn, $spellings, $partofs); break;
+      to_xml($pn, $spellings, $partofs, $precbys, $preslocs); break;
     case 'rdf':
-      to_pelagios_rdf($pn, $spellings, $partofs); break;
+      to_pelagios_rdf($pn, $spellings, $partofs, $preslocs); break;
     default:
       tlog(E_WARNING, "Invalid fmt type: " . $fmt);
   }
@@ -168,14 +164,16 @@ function to_json($pn, $spellings, $partofs, $precbys, $preslocs) {
     foreach ($spellings as $sp) {
         if ($sp['script_id'] != 0) {                      // has script
             $sp_json[] = array(
-                $sp['script']     =>  $sp['written_form'],
+                'written form'  =>  $sp['written_form'],
+                'script' =>  $sp['script'],    // split from written form
                 'exonym language' =>  $sp['exonym_lang'],    // FIXME test for null to exclude
                 'attested by'     =>  $sp['attested_by'],
                 'note'            =>  $sp['note']
             );
         } elseif ($sp['trsys_id'] != 'na') {              // is transcription
             $sp_json[] = array(
-                'transcribed in ' . $sp['trsys']   =>  $sp['written_form'],
+                'written form' =>  $sp['written_form'],
+                'transcribed in' => $sp['trsys'],
                 'attested by'             =>  $sp['attested_by'],
                 'note'                    =>  $sp['note']
             );
@@ -213,7 +211,7 @@ function to_json($pn, $spellings, $partofs, $precbys, $preslocs) {
     }
 
     $jt .= jline('system', 'China Historical GIS, Harvard University and Fudan University', 0)
-        .  jline('license', 'c. 2014', 0)
+        .  jline('license', LIC, 0)
         .  jline('uri', BASE_URL . '/placename/' . $pn['sys_id'], 0)
         .  jline('sys_id', $pn['sys_id'], 0)
         .  jline('sys_id of alternate', $pn['alt_of_id'], 0)
@@ -228,9 +226,9 @@ function to_json($pn, $spellings, $partofs, $precbys, $preslocs) {
         .  $indent . "},\n"
 
         .  $indent . "\"temporal\" : {\n"
-        .  jline('begin year', $pn['beg_yr'], 1)
+        .  jline('begin', $pn['beg_yr'], 1)
         .  jline('begin rule', $pn['beg_rule_id'], 1)
-        .  jline('end year', $pn['end_yr'], 1)
+        .  jline('end', $pn['end_yr'], 1)
         .  jline('end rule', $pn['end_rule_id'], 1, true)
         .  $indent . "},\n"
 
@@ -251,7 +249,7 @@ function to_json($pn, $spellings, $partofs, $precbys, $preslocs) {
 
 
         .  jline('data source',     $pn['data_src'], 0)
-        .  jline('source note',     $pn['snote_text'], 0, true)
+        .  jline('source note',     $pn['snote_text'], 0)
         .  jline('source uri',     $pn['snote_uri'], 0, true)
         . "}";
 
@@ -348,14 +346,14 @@ function to_geojson($pn, $spellings) {
 
 }
 
-function to_xml($pn, $spellings, $partofs, $preslocs) {
+function to_xml($pn, $spellings, $partofs, $preslocs, $preslocs) {
   header('Content-Type: text/xml; charset=utf-8');
   echo  "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
   // DOCTYPE published ??
   // removed ref to placename id in the header
   echo '<placename>';
   echo '  <system>China Historical GIS, Harvard University and Fudan University</system>';
-  echo '  <license>GPL v.3</license>';
+  echo '  <license>' . LIC . '</license>';
 
   echo '  <uri>' . BASE_URL . '/placename/' . $pn['sys_id'] . '</uri>';
 
@@ -383,7 +381,10 @@ function to_xml($pn, $spellings, $partofs, $preslocs) {
   echo '  </feature-type>';
 
   echo '  <temporal>';
-  echo '    <years begin-rule="' . $pn['beg_rule_id'] . '" end-rule="' . $pn['end_rule_id'] . '">' . $pn['beg_yr'] . ' - ' . $pn['end_yr'] . '</years>';
+  echo '    <begin>' . $pn['beg_yr'] . '</begin>';
+  echo '    <begin-rule>' . $pn['beg_rule_id'] . '</begin-rule>';
+  echo '    <end>' . $pn['end_yr'] . '</end>';
+  echo '    <end-rule>' . $pn['end_rule_id'] . '</end-rule>';
   echo '  </temporal>';
 
   echo '  <spatial>';
@@ -396,10 +397,11 @@ function to_xml($pn, $spellings, $partofs, $preslocs) {
   echo '    <geo-source>' . $pn['geo_src'] . '</geo-source>';
 
   echo '    <present-location>';
-//  foreach($preslocs as $ploc) {
-
-//  }
+    foreach($preslocs as $ploc) {
+      echo ' ' . $ploc['text_value'];
+    }
   echo '    </present-location>';
+
 
   echo '  </spatial>';
 
@@ -431,43 +433,61 @@ function to_xml($pn, $spellings, $partofs, $preslocs) {
 }
 
 // refactor to accept array of pn since the format is the same
-function to_pelagios_rdf($pn, $spellings, $partofs) {
-  header('Content-Type: text/turtle; charset=utf-8');
 
+function to_pelagios_rdf($pn, $spellings, $partofs, $preslocs) {header('Content-Type: application/rdf+xml; charset=utf-8');
+
+
+  echo "@prefix cito: <http://purl.org/spar/cito/> .\n";
+  echo "@prefix cnt: <http://www.w3.org/2011/content#> .\n";
   echo "@prefix dcterms: <http://purl.org/dc/terms/> .\n";
-  echo "@prefix osgeo: <http://data.ordnancesurvey.co.uk/ontology/geometry/> .\n";
-  echo "@prefix pelagios: <http://pelagios.github.io/vocab/terms#> .\n";
-  echo "@prefix pleiades: <http://pleiades.stoa.org/places/vocab#> .\n";
-  echo "@prefix geo: <http://www.w3.org/2003/01/geo/wgs84_pos#> .\n";
-  echo "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n";
-  echo "@prefix skos: <http://www.w3.org/2004/02/skos/core#> .\n";
-  echo "@prefix spatial: <http://geovocab.org/spatial#> .\n";
   echo "@prefix foaf: <http://xmlns.com/foaf/0.1/> .\n";
+  echo "@prefix geo: <http://www.w3.org/2003/01/geo/wgs84_pos#> .\n";
   echo "@prefix gn: <http://www.geonames.org/ontology#> .\n";
+  echo "@prefix lawd: <http://lawd.info/ontology/> .\n";
+  echo "@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .\n";
+  echo "@prefix skos: <http://www.w3.org/2004/02/skos/core#> .\n";
 
 // foreach in $pnarray
 
-    echo "<http://chgis.hmdc.harvard.edu/placename/" . $pn['sys_id'] . "> a pelagios:PlaceRecord ;\n";
-    echo "  dcterms:title \"" . $pn['sp_transcribed_form'] . "\" ;\n";   //FIXME if transcribed form missing
-    echo "  dcterms:description \"" . $pn['ftype_en'] . " " . $pn['ftype_vn']  .  "\" ;\n";
-    echo "  dcterms:temporal \"start=" . $pn['beg_yr']  . "; end=" . $pn['end_yr']  . "\" ;\n";                 
-
-    echo "  gn:countryCode \"cn\" ; \n";
+    echo "<http://chgis.hmdc.harvard.edu/placename/" . $pn['sys_id'] . ">  a lawd:Place ;\n";
+    echo "  rdfs:label \"" . $pn['sp_transcribed_form'] . "\" ;\n";   //FIXME if transcribed form missing
 
 //    echo "  skos:closeMatch <http://sws.geonames.org/" . "????" . "/> ;\n";                          
-
+//  names with lang declaration after @
     foreach($spellings as $sp) {
-      echo "  pleiades:hasName [ rdfs:label \"" . $sp['written_form'] . "\" ] ;\n";
+      echo "  lawd:hasName [ rdfs:label \"" . $sp['written_form'] . "\"@" . $sp['lang']  . " ] ;\n";
     }
-    echo "  pleiades:hasLocation [ geo:lat \"" . $pn['y_coord'] . "\"^^xsd:double ; geo:long \"" . $pn['x_coord'] . "\"^^xsd:double ] ;\n";
 
-    //  'spatial:P' is for Parents
+    echo "  geo:location [ geo:lat " . $pn['y_coord'] . "; geo:long " . $pn['x_coord'] . " ] ;\n";
+
+
+    //  items from $preslocs query
+    foreach ($preslocs as $ploc) {
+    echo "  gn:countryCode \"" . $ploc['country_code'] . "\" ; \n"; 
+    echo "  dcterms:coverage \"" . $ploc['text_value'] . "\" ; \n";
+    }
+
+    echo "  dcterms:temporal \"start=" . $pn['beg_yr']  . "; end=" . $pn['end_yr']  . "\" ;\n";
+    echo "  dcterms:description \"" . $pn['ftype_en'] . " " . $pn['ftype_vn']  .  "\" ;\n";
+
+    //  items from $partofs query - with URI only for valid RDF 
        foreach ($partofs as $po) {
-    echo "  spatial:P \"<http://chgis.hmdc.harvard.edu/placename/" . $po['parent_sys_id'] . ">";
-         echo " part of " . $po['parent_tr'] . " "  . $po['parent_vn'] . " from "  . $po['begin_year'] . " to " . $po['end_year'] . " \" ;\n";
+    echo "  dcterms:isPartOf <http://chgis.hmdc.harvard.edu/placename/" . $po['parent_sys_id'] . "> ;\n";
       }
  
     echo ".";
+
+//  original with description after URI
+/*
+       foreach ($partofs as $po) {
+    echo "  dcterms:isPartOf \"<http://chgis.hmdc.harvard.edu/placename/" . $po['parent_sys_id'] . ">";
+         echo " part of " . $po['parent_tr'] . " "  . $po['parent_vn'] . " from "  . $po['begin_year'] . " to " . $po['end_year'] . " \" ;\n";
+      }
+
+    echo ".";
+
+*/
+
 
     //multiples here, no container; iterate through list of pn's
 }
@@ -478,15 +498,19 @@ function to_html($pn, $spellings, $partofs, $preslocs) {
   header('Content-Type:text/html; charset=UTF-8');
   echo '<!DOCTYPE html><html>
    <head>
-    <link rel="stylesheet" type="text/css"  href="/tgaz/css/placename.css">
+    <link rel="stylesheet" type="text/css"  href="/tgaz/css/api.css">
     <link rel="stylesheet" type="text/css"  href="/tgaz/css/btn.css">
    </head>
   <body>';
-  echo '<div class="banner"><a href="/tgaz/"><img src="' . BASE_URL . '/tgaz/graf/TGAZ_API_icon.png" alt="Temporal Gazetteer API"></a> :: placename :  ' . $pn['sys_id'] . ' ';
+  echo '<div class="wrap">';
+  echo '<div class="banner"><a href="/tgaz/"><img src="' . BASE_URL . '/tgaz/graf/TGAZ_API_icon.png" alt="Temporal Gazetteer API"></a>';
+  echo '  <div class="btn btn-id">' . $pn['sys_id'] . '</div> <div class="uri"><a href="' . BASE_URL . '/placename/' . $pn['sys_id'] . '"> ' . BASE_URL . '/placename/' . $pn['sys_id'] . '</a></div>';
+  echo '</div>';
+
   echo '<div class="btn-group">
     <a class="btn btn-mini" href="/placename/json/' . $pn['sys_id'] . '">JSON</a>
     <a class="btn btn-mini" href="/placename/xml/' . $pn['sys_id'] . '">XML</a>
-    <a class="btn btn-mini" href="/placename/rdf/' . $pn['sys_id'] . '">RDF</a>
+    <a class="btn btn-mini" href="/placename/rdf/' . $pn['sys_id'] . '" title="save link as">RDF</a>
   </div></div>';
   echo '<div class="name">placename: <placename> <p \> ';
 
@@ -502,7 +526,6 @@ function to_html($pn, $spellings, $partofs, $preslocs) {
       echo '      <exonym-lang>' . $sp['exonym_lang']  . '</exonym-lang>';
       echo '      <attested-by> <font size=-1>attested by: ' . $sp['attested_by'] . '</font></attested-by>';
       echo '      <note>' . $sp['note'] . '</note>';
-
     echo '    </spelling> <p />';
   }
   echo '  </spellings>';
@@ -564,27 +587,31 @@ function to_html($pn, $spellings, $partofs, $preslocs) {
   echo '</div>';
 
 if ($pn['snote_text'] !='') {
-  echo '<div class="note">source note: <b>';
+  echo '<div class="note">source note: ';
   echo '  <source-note>' . $pn['snote_text'] . '</source-note>';
-  echo '</b></div>';
-}
-if ($pn['snote_uri'] !='') {
-  echo '<div class="note">source uri: ';
-  echo '  <source-note-uri><a href="' . $pn['snote_uri'] . '">' . $pn['snote_uri'] . '</a></source-note-uri>';
   echo '</div>';
 }
-  echo '<div class="link">permalink: ';
-  echo '  <uri>' . BASE_URL . '/placename/' . $pn['sys_id'] . '</uri>';
+if (($pn['snote_uri'] !='') AND  ($pn['snote_uri'] !='CHGIS')){
+  echo '<div class="note">source uri: ';
+  echo '  <source-note-uri><a href="' . $pn['snote_uri'] . '" target="_new">' . $pn['snote_uri'] . '</a></source-note-uri>';
+  echo '</div>';
+}
 
-  echo '  <p>Copyright: ' . date('Y') . '  ';
-  echo '  &copy; <copyright>' . $pn['data_src'] . '</copyright> ';
-  echo '  <br \>&copy; <copyright>China Historical GIS [Harvard University and Fudan University]</copyright> ';
-  echo '  <p><system>Generated by the <a href="/tgaz">Temporal Gazetteer Service</a></system><br />';
+  echo '<div class="link"><div class="btn btn-permalink"> permalink </div>';
+  echo '  <uri><a href="' . BASE_URL . '/placename/' . $pn['sys_id'] . '"> ';
+  echo BASE_URL . '/placename/' . $pn['sys_id'] . '</a></uri>';
+  echo '</div>';
+
+  echo '<div class="license">';
+  echo '  Copyright: ' . date('Y') . '  ';
+  echo '  &copy; <copyright>' . $pn['data_src'] . '</copyright>,  License:  <a href="' . LIC_URI . '" target="_blank"><license>' . LIC .'</license></a><br />';
+  echo '  <br \>Published by: <publisher>China Historical GIS [Harvard University and Fudan University]</publisher> ';
+  echo '  <p>Generated by the <a href="/tgaz"><system>Temporal Gazetteer Service</system></a><br />';
   echo '</div>';
 
   echo '</placename>';
+  echo '</div>';  
   echo '</body></html>';
 }
-
 
 ?>

@@ -1,0 +1,41 @@
+.wrap {
+ margin: 8px 0 8px 18px;
+}
+.banner {
+}
+.uri {
+ vertical-align:middle;
+ margin-top:-20px;
+ display:inline-block;
+}
+.name {
+ margin: 8px 0 0 8px;
+ font-size: 110%;
+ font-weight: 600;
+}
+.type {
+ margin: 8px 0 0 18px;
+}
+.year {
+ margin: 8px 0 0 18px;
+}
+.geo {
+ margin: 8px 0 0 18px;
+}
+.link {
+ margin: 18px 0 0 18px;
+}
+.src {
+ margin: 8px 0 0 18px;
+}
+.relate { 
+ margin: 8px 0 0 18px;
+}
+.note {
+ margin: 8px 0 0 18px;
+}
+
+.license {
+ font-size: 0.8em;
+ margin: 32px 0 0 28px;
+}
