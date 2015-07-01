@@ -1,6 +1,6 @@
 <?php
 
-require ("../../polyphony.inc");
+require ("../../CONNECTION_INFO.inc");
 require ("./tgaz-lib.php");
 
 echo "<br /> building paths ... ";

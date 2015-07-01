@@ -1,5 +1,5 @@
 <?php
-require ("../../polyphony.inc");
+require ("../../CONNECTION_INFO.inc");
 require ("./tgaz-lib.php");
 require ("./placename.php");
 #require ("./featuretype.php");
@@ -68,7 +68,7 @@ if (isset($path_parts[3])) {
         $ftyp = (isset($_GET["ftyp"]) ? $_GET["ftyp"] : null);
 //  altered for pagination 2014-10-09
 //  ok this must be the trouble
-//  indeed the 
+//  indeed the
         $p = (isset($_GET["p"]) ? $_GET["p"] : null);
         $t = (isset($_GET["total"]) ? $_GET["total"] : null);
         $pg = 0;
