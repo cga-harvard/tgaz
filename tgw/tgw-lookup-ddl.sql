@@ -113,6 +113,7 @@ INSERT INTO trsys VALUES ('ru_iso', 'Russian ISO-1995', 'ru', '', NULL);
 -- load existing data into ftype_xx table
 -- tranfer with:
 -- insert into ftype select id, name_ch, name_py, name_rm, adl_class, "CHGIS", NULL, note, NULL, NULL, NULL from ftype_xx;
+-- timestamp is implicitly NOT NULL in MySQL
 CREATE TABLE IF NOT EXISTS ftype (
   id                           INT AUTO_INCREMENT,
 
@@ -147,6 +148,7 @@ CREATE TABLE IF NOT EXISTS ftype (
 -- load existing data into table snote_xx
 -- transfer with:
 -- insert into snote select NULL, nts_noteid, 'Fudan', nts_comp, 'zh',  nts_nmft, NULL, NULL, nts_fullnote from snote_xx;
+-- timestamp is implicitly NOT NULL
 CREATE TABLE IF NOT EXISTS snote (
   id                           INT auto_increment,
 

@@ -36,6 +36,10 @@ CREATE TABLE  IF NOT EXISTS placename (
 -- processing
   added_on              TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  -- no auto update
 
+  default_parent_id   INT UNSIGNED,                  -- previously calculated as just the earliest parent
+  parent_status       ENUM('earliest', 'preferred') DEFAULT NULL,
+
+
 PRIMARY KEY (id),
 INDEX pn_sysid_idx (sys_id),
 
@@ -52,17 +56,21 @@ INDEX alt_of_idx (alt_of_id),
 INDEX beg_rule_idx (beg_rule_id),
   FOREIGN KEY (beg_rule_id) REFERENCES drule(id),
 INDEX end_rule_idx (end_rule_id),
-  FOREIGN KEY (end_rule_id) REFERENCES drule(id)
+  FOREIGN KEY (end_rule_id) REFERENCES drule(id),
+INDEX pn_def_prnt_idx (default_parent_id),
+  FOREIGN KEY (default_parent_id) REFERENCES placename(placename_id)
 
 ) ENGINE = INNODB;
 
---
---
+-- there are 2 types of spellings:  regular and transcription
+-- default_per_type refers to these two types, so there can be both a default regular spelling and default transcription
+-- if a spelling is not a transcription (e.g. into roman chars), then the script will identify a known script, not 'n/a'
+-- if a spelling is a transcription, then the script_id would be 'n/a' and the trsys_id would be a value > 0
 CREATE TABLE spelling (
   id                        INT UNSIGNED auto_increment,
   placename_id              INT UNSIGNED NOT NULL,
   script_id                 INT NOT NULL,
-  written_form              VARCHAR(256),     -- i.e. the glyph, or text form
+  written_form              VARCHAR(256) NOT NULL,     -- i.e. the glyph, or text form
   exonym_lang               VARCHAR(8),       -- ISO 2-char, e.g. 'es' for Spanish in the case of 'Las Vegas'
 
   trsys_id                  VARCHAR(10) NOT NULL,  -- for type 'transcription', otherwise use 'na'
