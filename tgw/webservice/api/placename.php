@@ -95,7 +95,7 @@ function get_placename($conn, $fmt, $sys_id) {
     return;
   }
 
-  $pn['self_uri'] = 'http://chgis.harvard.edu/placename/' . $pn['sys_id'];
+  $pn['self_uri'] =  BASE_URL . '/placename/' . $pn['sys_id'];
 
   $spellings = get_deps($conn, "SELECT * FROM v_spelling WHERE placename_id = " . $pn['id'] . ";");
 
@@ -449,7 +449,8 @@ function to_pelagios_rdf($pn, $spellings, $partofs, $preslocs) {header('Content-
 
 // foreach in $pnarray
 
-    echo "<http://chgis.hmdc.harvard.edu/placename/" . $pn['sys_id'] . ">  a lawd:Place ;\n";
+    echo "<" . BASE_URL . "/placename/" . $pn['sys_id'] . ">  a lawd:Place ;\n";
+// OLD PRODUCTION ->  echo "<http://chgis.hmdc.harvard.edu/placename/" . $pn['sys_id'] . ">  a lawd:Place ;\n";
     echo "  rdfs:label \"" . $pn['sp_transcribed_form'] . "\" ;\n";   //FIXME if transcribed form missing
 
 //    echo "  skos:closeMatch <http://sws.geonames.org/" . "????" . "/> ;\n";                          
@@ -472,7 +473,8 @@ function to_pelagios_rdf($pn, $spellings, $partofs, $preslocs) {header('Content-
 
     //  items from $partofs query - with URI only for valid RDF 
        foreach ($partofs as $po) {
-    echo "  dcterms:isPartOf <http://chgis.hmdc.harvard.edu/placename/" . $po['parent_sys_id'] . "> ;\n";
+// OLD    echo "  dcterms:isPartOf <http://chgis.hmdc.harvard.edu/placename/" . $po['parent_sys_id'] . "> ;\n";
+    echo "  dcterms:isPartOf <" . BASE_URL . "/placename/" . $po['parent_sys_id'] . "> ;\n";
       }
  
     echo ".";
@@ -503,14 +505,14 @@ function to_html($pn, $spellings, $partofs, $preslocs) {
    </head>
   <body>';
   echo '<div class="wrap">';
-  echo '<div class="banner"><a href="/tgaz/"><img src="' . BASE_URL . '/tgaz/graf/TGAZ_API_icon.png" alt="Temporal Gazetteer API"></a>';
-  echo '  <div class="btn btn-id">' . $pn['sys_id'] . '</div> <div class="uri"><a href="' . BASE_URL . '/placename/' . $pn['sys_id'] . '"> ' . BASE_URL . '/placename/' . $pn['sys_id'] . '</a></div>';
+  echo '<div class="banner"><a href="/tgaz/"><img src="' . BASE_URL . '/graf/TGAZ_API_icon.png" alt="Temporal Gazetteer API"></a>';
+  echo '  <div class="uri"> URI :: <a href="' . BASE_URL . '/placename/' . $pn['sys_id'] . '"> ' . BASE_URL . '/placename/' . $pn['sys_id'] . '</a></div>';
   echo '</div>';
 
   echo '<div class="btn-group">
-    <a class="btn btn-mini" href="/placename/json/' . $pn['sys_id'] . '">JSON</a>
-    <a class="btn btn-mini" href="/placename/xml/' . $pn['sys_id'] . '">XML</a>
-    <a class="btn btn-mini" href="/placename/rdf/' . $pn['sys_id'] . '" title="save link as">RDF</a>
+    <a class="btn btn-mini" href="' . BASE_URL .'/placename/json/' . $pn['sys_id'] . '">JSON</a>
+    <a class="btn btn-mini" href="' . BASE_URL .'/placename/xml/' . $pn['sys_id'] . '">XML</a>
+    <a class="btn btn-mini" href="' . BASE_URL .'/placename/rdf/' . $pn['sys_id'] . '" title="save link as">RDF</a>
   </div></div>';
   echo '<div class="name">placename: <placename> <p \> ';
 
@@ -572,7 +574,7 @@ function to_html($pn, $spellings, $partofs, $preslocs) {
   echo '    <part-of-relationships>part of historical units: ';
 
     foreach ($partofs as $po) {
-      echo ' <br><a href="/placename/html/' . $po['parent_sys_id'] . '">';
+      echo ' <br><a href="' . $po['parent_sys_id'] . '">';
       echo ' <parent-name>' . $po['parent_vn'] . '</parent-name>';
       echo ' <transcribed-name>' . $po['parent_tr'] . '</transcribed-name></a>';
       echo ' from ' . $po['begin_year'] . ' to ' . $po['end_year'];
@@ -583,7 +585,7 @@ function to_html($pn, $spellings, $partofs, $preslocs) {
   echo '</div>';
 
   echo '<div class="src">data source: ';
-  echo '  <data-source>' . $pn['data_src'] . '</data-source>';
+  echo '  <data-source>' . $pn['data_src'] . '</data-source>' . $pn['snote_uri'];
   echo '</div>';
 
 if ($pn['snote_text'] !='') {
@@ -597,10 +599,6 @@ if (($pn['snote_uri'] !='') AND  ($pn['snote_uri'] !='CHGIS')){
   echo '</div>';
 }
 
-  echo '<div class="link"><div class="btn btn-permalink"> permalink </div>';
-  echo '  <uri><a href="' . BASE_URL . '/placename/' . $pn['sys_id'] . '"> ';
-  echo BASE_URL . '/placename/' . $pn['sys_id'] . '</a></uri>';
-  echo '</div>';
 
   echo '<div class="license">';
   echo '  Copyright: ' . date('Y') . '  ';

@@ -1,6 +1,6 @@
 <?php
 
-require ("../../CONNECTION_INFO.inc");
+require ("../REPLACE.inc");
 require ("./tgaz-lib.php");
 
 echo "<br /> building paths ... ";

@@ -1,5 +1,5 @@
 <?php
-require ("../../CONNECTION_INFO.inc");
+require ("CONNECTION-INFO.inc");
 require ("./tgaz-lib.php");
 require ("./placename.php");
 #require ("./featuretype.php");
@@ -25,7 +25,7 @@ if (!$conn) {
 $requrl = "$_SERVER[REQUEST_URI]" ;  // e.g. /placename.php?fmt=json&id=hvd_34376
 $url_path = parse_url( $requrl, PHP_URL_PATH);
 
-// echo "<br /> $requrl :: $url_path";
+// echo "<br /> $requrl :: $url_path <hr>";
 
 //use "explode" to parse
 // e.g.: $request_parts = explode('/', $_GET['url']);
@@ -36,8 +36,14 @@ $path_parts = explode('/', $url_path);
 // echo $path_parts[1];
 
 //routing of the uri elements
-if (isset($path_parts[3])) {
-  $service = $path_parts[3];
+
+
+//  please note following settings related to the position in the path for the exploded elements 
+//  use the commented out echo $path_parts[1] above to determine the position of "placename" in the path
+//  the position of "placename" should be set in the following line 
+
+if (isset($path_parts[2])) {
+  $service = $path_parts[2];
 
   if ($service == "service-info") {
     get_service_info_json($conn);
@@ -48,12 +54,18 @@ if (isset($path_parts[3])) {
 
     $fmt = "html";  //default
 
-    if (isset($path_parts[4])) {
-      if ($path_parts[4] == 'json' || $path_parts[4] == 'xml' || $path_parts[4] == 'rdf' || $path_parts[4] == 'html') {
-        get_placename($conn, $path_parts[4], $path_parts[5]);  // FIXME verify exists
+//  based on the setting of the "Placename" position, renumber the following elements 
+//  for example if the path from webroot is /tgaz/placename/json/hvd_9722
+//  and placename is path_parts[2]  then json = 3  and hvd_9722 = 4
+
+
+    if (isset($path_parts[3])) {
+      if ($path_parts[3] == 'json' || $path_parts[3] == 'xml' || $path_parts[3] == 'rdf' || $path_parts[3] == 'html') {
+        get_placename($conn, $path_parts[3], $path_parts[4]);  // FIXME verify exists
       } else {
-        get_placename($conn, $fmt, $path_parts[4]);
-      }
+        get_placename($conn, $fmt, $path_parts[3]);
+      } 
+
     } else {
       if (isset($_GET["fmt"])) {
         $fmt = $_GET["fmt"];
@@ -68,7 +80,7 @@ if (isset($path_parts[3])) {
         $ftyp = (isset($_GET["ftyp"]) ? $_GET["ftyp"] : null);
 //  altered for pagination 2014-10-09
 //  ok this must be the trouble
-//  indeed the
+//  indeed the 
         $p = (isset($_GET["p"]) ? $_GET["p"] : null);
         $t = (isset($_GET["total"]) ? $_GET["total"] : null);
         $pg = 0;
