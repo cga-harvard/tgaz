@@ -1,6 +1,6 @@
 <?php
 
-require ("../REPLACE.inc");
+require ("../CONNECT.inc.php");
 require ("./tgaz-lib.php");
 
 echo "<br /> building paths ... ";

@@ -13,6 +13,14 @@
  font-size: 110%;
  font-weight: 600;
 }
+.spelling {
+ margin: 8px;
+ font-size: 110%;
+ font-weight: 600;
+ padding: 4px;
+ background-color: rgba(255, 204, 0, .6);
+ display: inline;
+}
 .type {
  margin: 8px 0 0 18px;
 }
@@ -39,3 +47,28 @@
  font-size: 0.8em;
  margin: 32px 0 0 28px;
 }
+
+#partof {
+   clear: both;
+   float: top;
+   position: relative;
+   margin-bottom: 26px;
+}
+#parent_slug {
+   clear: both;
+   float: top;
+   position: relative;
+   margin-top: 10px;
+   background-color: #ccc; 
+   padding: 5px 10px;
+   width: 85px;
+}
+
+#subunits {
+   clear: both;
+   float: top;
+   position: relative;
+   margin-top: 10px;
+   margin-bottom: 26px;
+}
+

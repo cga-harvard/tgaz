@@ -39,6 +39,12 @@
      'placename_id'     'country_code'    'source'
                                           'attestation'
 
+  subunits:  [short for 'subordinate units' a.k.a. children]
+     'id' [part_of.id]  'begin_year'      'parent_sys_id'
+     'child_id'         'end_year'        'parent_vn'
+     'parent_id'                         'parent_tr'
+     'child_sys_id'    'child_vn'        'child_tr'
+
 */
 function get_placename($conn, $fmt, $sys_id) {
 
@@ -96,6 +102,8 @@ function get_placename($conn, $fmt, $sys_id) {
   }
 
   $pn['self_uri'] =  BASE_URL . '/placename/' . $pn['sys_id'];
+// remove
+//  $pn['self_uri'] = 'http://chgis.harvard.edu/placename/' . $pn['sys_id'];
 
   $spellings = get_deps($conn, "SELECT * FROM v_spelling WHERE placename_id = " . $pn['id'] . ";");
 
@@ -113,21 +121,25 @@ function get_placename($conn, $fmt, $sys_id) {
   $partofs = get_deps($conn, "SELECT * FROM v_partof WHERE child_id = " . $pn['id'] . " ORDER BY begin_year;");
   $precbys = get_deps($conn, "SELECT * FROM v_precby WHERE placename_id = " . $pn['id'] . ";");
   $preslocs = get_deps($conn, "SELECT * FROM present_loc WHERE placename_id = " . $pn['id'] . " AND type = 'location';");
+  $subunits = get_deps($conn, "SELECT * FROM v_children WHERE parent_id = " . $pn['id'] . " ORDER BY child_vn, begin_year;");
 // FIXME extract one preferred location
+
 
    // BETTER: use these methods in the to_xx call's parameter list to avoid unneeded work
 
   switch($fmt) {
     case 'json':
-      to_json($pn, $spellings, $partofs, $precbys, $preslocs); break;
+      to_json($pn, $spellings, $partofs, $precbys, $preslocs, $subunits); break;
     case 'geojson':
       to_geojson($pn, $spellings); break;
     case 'html':
-      to_html($pn, $spellings, $partofs, $precbys, $preslocs); break;
+      to_html($pn, $spellings, $partofs, $precbys, $preslocs, $subunits); break;
     case 'xml':
-      to_xml($pn, $spellings, $partofs, $precbys, $preslocs); break;
+      to_xml($pn, $spellings, $partofs, $precbys, $preslocs, $subunits); break;
     case 'rdf':
       to_pelagios_rdf($pn, $spellings, $partofs, $preslocs); break;
+    case 'esgar':
+      to_esgar($pn, $spellings, $partofs, $precbys, $preslocs, $subunits); break;
     default:
       tlog(E_WARNING, "Invalid fmt type: " . $fmt);
   }
@@ -154,7 +166,7 @@ function get_deps($conn, $query) {
  *  workarounds with json_encode and related versions (PEAR) fail to render Chinese characters correctly
  *  so this function emits json the old-fashioned way which also solves the problem with "null" output
  */
-function to_json($pn, $spellings, $partofs, $precbys, $preslocs) {
+function to_json($pn, $spellings, $partofs, $precbys, $preslocs, $subunits) {
 
     $jt = "{\n";
     $indent = '  ';
@@ -188,6 +200,17 @@ function to_json($pn, $spellings, $partofs, $precbys, $preslocs) {
           'parent id'             => $po['parent_sys_id'],
           'name'                  => $po['parent_vn'],
           'transcribed'           => $po['parent_tr']
+        );
+    }
+
+    $su_json = array();
+    foreach ($subunits as $su) {
+        $su_json[] = array(
+          'begin_year'            => $su['begin_year'],
+          'end_year'              => $su['end_year'],
+          'child id'              => $su['child_sys_id'],
+          'name'                  => $su['child_vn'],
+          'transcribed'           => $su['child_tr']
         );
     }
 
@@ -244,6 +267,7 @@ function to_json($pn, $spellings, $partofs, $precbys, $preslocs) {
 
         .  $indent . "\"historical_context\" : {\n"
         .  jarray('part of',         $po_json, 1)
+        .  jarray('subordinate units',  $su_json, 1)
         .  jarray('preceded by',     $pb_json, 1, true)
         .  $indent . "},\n"
 
@@ -302,6 +326,125 @@ function jarray($n, $a, $d, $last = false) {
   return $s;
 }
 
+/*
+ */
+function to_esgar($pn, $spellings, $partofs, $precbys, $preslocs, $subunits) {
+
+    $jt = "{\n";
+    $indent = '  ';
+    $d = 0;          //depth of indent
+
+    $sp_json = array();  //indexed
+    foreach ($spellings as $sp) {
+        if ($sp['script_id'] != 0) {                      // has script
+            $sp_json[] = array(
+                'id'            =>  $sp['id'],
+                'written form'  =>  $sp['written_form'],
+                'script' =>  $sp['script'],    // split from written form
+                'exonym language' =>  $sp['exonym_lang'],    // FIXME test for null to exclude
+                'attested by'     =>  $sp['attested_by'],
+                'note'            =>  $sp['note']
+            );
+        } elseif ($sp['trsys_id'] != 'na') {              // is transcription
+            $sp_json[] = array(
+                'id'            =>  $sp['id'],
+                'written form' =>  $sp['written_form'],
+                'transcribed in' => $sp['trsys'],
+                'attested by'             =>  $sp['attested_by'],
+                'note'                    =>  $sp['note']
+            );
+        }
+    }
+
+    $po_json = array();  //indexed
+    foreach ($partofs as $po) {
+        $po_json[] = array(
+          'begin year'                 => $po['begin_year'],
+          'end year'                 => $po['end_year'],
+          'parent id'             => $po['parent_sys_id'],
+          'name'                  => $po['parent_vn'],
+          'transcribed'           => $po['parent_tr']
+        );
+    }
+
+    $su_json = array();
+    foreach ($subunits as $su) {
+        $su_json[] = array(
+          'begin_year'            => $su['begin_year'],
+          'end_year'              => $su['end_year'],
+          'child id'              => $su['child_sys_id'],
+          'name'                  => $su['child_vn'],
+          'transcribed'           => $su['child_tr']
+        );
+    }
+
+    $pb_json = array();  //indexed
+    foreach ($precbys as $pb) {
+        $pb_json[] = array(
+          'preceded by id'             => $pb['pb_sys_id'],
+          'name'                  => $pb['pb_vn'],
+          'transcribed'           => $pb['pb_tr']
+        );
+    }
+
+    $ploc_json = array();  //indexed
+    foreach ($preslocs as $ploc) {
+        $ploc_json[] = array(
+           'country code'         => $ploc['country_code'],
+           'text'                 => $ploc['text_value'],
+           'source'               => $ploc['source'],
+           'attestation'          => $ploc['attestation']
+        );
+    }
+
+    $jt .= jline('system', 'China Historical GIS, Harvard University and Fudan University', 0)
+        .  jline('license', LIC, 0)
+        .  jline('uri', BASE_URL . '/placename/' . $pn['sys_id'], 0)
+        .  jline('sys_id', $pn['sys_id'], 0)
+        .  jline('sys_id of alternate', $pn['alt_of_id'], 0)
+
+        .  jarray('spellings', $sp_json, 0)
+
+        .  $indent . "\"feature_type\" : {\n"
+        .  jline('name', $pn['ftype_vn'], 1)
+        .  jline('alternate name', $pn['ftype_alt'], 1)
+        .  jline('transcription', $pn['ftype_tr'], 1)
+        .  jline('English', $pn['ftype_en'], 1, true)
+        .  $indent . "},\n"
+
+        .  $indent . "\"temporal\" : {\n"
+        .  jline('begin', $pn['beg_yr'], 1)
+        .  jline('begin rule', $pn['beg_rule_id'], 1)
+        .  jline('end', $pn['end_yr'], 1)
+        .  jline('end rule', $pn['end_rule_id'], 1, true)
+        .  $indent . "},\n"
+
+        .  $indent . "\"spatial\" : {\n"
+        .  jline('object_type',      $pn['obj_type'], 1)
+        .  jline('xy_type',          $pn['xy_type'], 1)
+        .  jline('latitude',         $pn['y_coord'], 1)
+        .  jline('longitude',        $pn['x_coord'], 1)
+        .  jline('source',           $pn['geo_src'], 1)
+        .  jarray('present_location', $ploc_json, 1, true)
+        //present_jurisdiction
+        .  $indent . "},\n"
+
+        .  $indent . "\"historical_context\" : {\n"
+        .  jarray('part of',         $po_json, 1)
+        .  jarray('subordinate units',  $su_json, 1)
+        .  jarray('preceded by',     $pb_json, 1, true)
+        .  $indent . "},\n"
+
+
+        .  jline('data source',     $pn['data_src'], 0)
+        .  jline('source note',     $pn['snote_text'], 0)
+        .  jline('source uri',     $pn['snote_uri'], 0, true)
+        . "}";
+
+  header('Content-Type: text/json; charset=utf-8');
+  echo $jt;
+}
+
 // file format the same for one or multiples - array of one or many
 //
 function to_geojson($pn, $spellings) {
@@ -346,7 +489,7 @@ function to_geojson($pn, $spellings) {
 
 }
 
-function to_xml($pn, $spellings, $partofs, $preslocs, $preslocs) {
+function to_xml($pn, $spellings, $partofs, $preslocs, $preslocs, $subunits) {
   header('Content-Type: text/xml; charset=utf-8');
   echo  "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
   // DOCTYPE published ??
@@ -414,6 +557,16 @@ function to_xml($pn, $spellings, $partofs, $preslocs, $preslocs) {
       echo '      </part-of>';
     }
   echo '    </part-of-relationships>';
+
+  echo '    <subordinate-units>';
+    foreach ($subunits as $su) {
+      echo '      <subordinate-unit sys-id="' . $su['child_sys_id'] . '" from="' . $su['begin_year'] . '" to="' . $su['end_year'] . '" >';
+      echo '        <name>' . $su['child_vn'] . '</name>';
+      echo '        <transcribed-name>' . $su['child_tr'] . '</transcribed-name>';
+      echo '      </subordinate-unit>';
+    }
+  echo '    </subordinate-units>';
+
   echo '  </historical-context>';
 
   echo '  <data-source>' . $pn['data_src'] . '</data-source>';
@@ -449,11 +602,10 @@ function to_pelagios_rdf($pn, $spellings, $partofs, $preslocs) {header('Content-
 
 // foreach in $pnarray
 
-    echo "<" . BASE_URL . "/placename/" . $pn['sys_id'] . ">  a lawd:Place ;\n";
-// OLD PRODUCTION ->  echo "<http://chgis.hmdc.harvard.edu/placename/" . $pn['sys_id'] . ">  a lawd:Place ;\n";
+    echo "<http://chgis.hmdc.harvard.edu/placename/" . $pn['sys_id'] . ">  a lawd:Place ;\n";
     echo "  rdfs:label \"" . $pn['sp_transcribed_form'] . "\" ;\n";   //FIXME if transcribed form missing
 
-//    echo "  skos:closeMatch <http://sws.geonames.org/" . "????" . "/> ;\n";                          
+//    echo "  skos:closeMatch <http://sws.geonames.org/" . "????" . "/> ;\n";
 //  names with lang declaration after @
     foreach($spellings as $sp) {
       echo "  lawd:hasName [ rdfs:label \"" . $sp['written_form'] . "\"@" . $sp['lang']  . " ] ;\n";
@@ -464,19 +616,20 @@ function to_pelagios_rdf($pn, $spellings, $partofs, $preslocs) {header('Content-
 
     //  items from $preslocs query
     foreach ($preslocs as $ploc) {
-    echo "  gn:countryCode \"" . $ploc['country_code'] . "\" ; \n"; 
+    echo "  gn:countryCode \"" . $ploc['country_code'] . "\" ; \n";
     echo "  dcterms:coverage \"" . $ploc['text_value'] . "\" ; \n";
     }
 
     echo "  dcterms:temporal \"start=" . $pn['beg_yr']  . "; end=" . $pn['end_yr']  . "\" ;\n";
     echo "  dcterms:description \"" . $pn['ftype_en'] . " " . $pn['ftype_vn']  .  "\" ;\n";
 
-    //  items from $partofs query - with URI only for valid RDF 
+    //  items from $partofs query - with URI only for valid RDF
        foreach ($partofs as $po) {
-// OLD    echo "  dcterms:isPartOf <http://chgis.hmdc.harvard.edu/placename/" . $po['parent_sys_id'] . "> ;\n";
+// REMOVE
+//    echo "  dcterms:isPartOf <http://chgis.hmdc.harvard.edu/placename/" . $po['parent_sys_id'] . "> ;\n";
     echo "  dcterms:isPartOf <" . BASE_URL . "/placename/" . $po['parent_sys_id'] . "> ;\n";
       }
- 
+
     echo ".";
 
 //  original with description after URI
@@ -496,13 +649,21 @@ function to_pelagios_rdf($pn, $spellings, $partofs, $preslocs) {header('Content-
 
 //function to_html5($pn, $spellings, $partofs) {
 
-function to_html($pn, $spellings, $partofs, $preslocs) {
+function to_html($pn, $spellings, $partofs, $precbys, $preslocs, $subunits) {
   header('Content-Type:text/html; charset=UTF-8');
   echo '<!DOCTYPE html><html>
    <head>
     <link rel="stylesheet" type="text/css"  href="/tgaz/css/api.css">
     <link rel="stylesheet" type="text/css"  href="/tgaz/css/btn.css">
    </head>
+
+   <script type="text/javascript" src="' . BASE_URL . '/lib/jquery.min.js"></script>
+   <script type="text/javascript">
+    function toggleDiv(divId) {
+     $("#"+divId).toggle();
+    }
+   </script> 
+
   <body>';
   echo '<div class="wrap">';
   echo '<div class="banner"><a href="/tgaz/"><img src="' . BASE_URL . '/graf/TGAZ_API_icon.png" alt="Temporal Gazetteer API"></a>';
@@ -510,28 +671,31 @@ function to_html($pn, $spellings, $partofs, $preslocs) {
   echo '</div>';
 
   echo '<div class="btn-group">
-    <a class="btn btn-mini" href="' . BASE_URL .'/placename/json/' . $pn['sys_id'] . '">JSON</a>
-    <a class="btn btn-mini" href="' . BASE_URL .'/placename/xml/' . $pn['sys_id'] . '">XML</a>
-    <a class="btn btn-mini" href="' . BASE_URL .'/placename/rdf/' . $pn['sys_id'] . '" title="save link as">RDF</a>
+    <a class="btn btn-mini" href="' . BASE_URL . '/placename/json/' . $pn['sys_id'] . '">JSON</a>
+    <a class="btn btn-mini" href="' . BASE_URL . '/placename/xml/' . $pn['sys_id'] . '">XML</a>
+    <a class="btn btn-mini" href="' . BASE_URL . '/placename/rdf/' . $pn['sys_id'] . '" title="save link as">RDF</a>
   </div></div>';
   echo '<div class="name">placename: <placename> <p \> ';
 
   echo ' <spellings>';
   foreach($spellings as $sp) {
-    echo '    <spelling>';
+    echo '    <div class ="spelling">';
     if ($sp['script_id'] != 0) {                      // has script
-      echo '      <written-form script="' . $sp['script'] . '"><b>' . $sp['written_form'] . ' </b> (' . $sp['script'] . ')</written-form> <br />';
+      echo '    <written-form script="' . $sp['script'] . '"><b>' . $sp['written_form'] . ' </b> (' . $sp['script'] . ')</written-form>  ';
     } elseif ($sp['trsys_id'] != 'na') {              // is transcription
-      echo '      <transcription system="' . $sp['trsys'] . '">  '  .$sp['written_form'] . ' (' . $sp['trsys'] . ')</transcription> <br />';
+      echo '    <transcription system="' . $sp['trsys'] . '">  '  .$sp['written_form'] . ' (' . $sp['trsys'] . ')</transcription>';
 
     }
-      echo '      <exonym-lang>' . $sp['exonym_lang']  . '</exonym-lang>';
-      echo '      <attested-by> <font size=-1>attested by: ' . $sp['attested_by'] . '</font></attested-by>';
-      echo '      <note>' . $sp['note'] . '</note>';
-    echo '    </spelling> <p />';
+      echo '    <exonym-lang>' . $sp['exonym_lang']  . '</exonym-lang>';
+    if ($sp['attested_by'] !=''){
+      echo '      <attested-by>  <font size=-1>attested by: ' . $sp['attested_by'] . '</font></attested-by>';
+    }
+
+      echo '    <note>' . $sp['note'] . '</note>';
+    echo '    </div><p />';
   }
   echo '  </spellings>';
-  echo '</div>';  
+  echo '</div>';
 
   echo '<div class="type">type: ';
   echo '  <feature-type>';
@@ -569,23 +733,59 @@ function to_html($pn, $spellings, $partofs, $preslocs) {
   echo '  </spatial>';
   echo '</div>';
 
-  echo '<div class="relate">';
+  echo '<div class="relate">';  
   echo '  <historical-context>';
-  echo '    <part-of-relationships>part of historical units: ';
+
+$po_length = sizeof($partofs);
+if ($po_length > 0) {
+  echo '    <div id="partof">';
+  echo '     <part-of-relationships><div id="parent_slug">part of:</div>';
 
     foreach ($partofs as $po) {
-      echo ' <br><a href="' . $po['parent_sys_id'] . '">';
+      echo '<br><a href="';
+      echo  BASE_URL . '/placename/' . $po['parent_sys_id'] . '">';
       echo ' <parent-name>' . $po['parent_vn'] . '</parent-name>';
       echo ' <transcribed-name>' . $po['parent_tr'] . '</transcribed-name></a>';
       echo ' from ' . $po['begin_year'] . ' to ' . $po['end_year'];
     }
 
   echo '    </part-of-relationships>';
+  echo '   </div>';  // closing part of div to format sub-units div
+} 
+else {
+echo '<div id="parent_slug">no parents</div>';
+}
+
+$su_length = sizeof($subunits);
+
+if ($su_length > 0) {
+  echo '
+   <div id="subunits">
+     <a href="javascript:toggleDiv(\'sulist\');" title="show subordinate units" style="background-color: #ccc; padding: 5px 10px;">sub units:</a>
+       <div id="sulist" style="display:none">
+  ';
+            foreach ($subunits as $su) {
+              echo '<a href="';
+              echo  BASE_URL . '/placename/' . $su['child_sys_id'] . '">';
+              echo  $su['child_vn'] . ' ';
+              echo  $su['child_tr'] . '</a> ';
+              echo 'from: ' . $su['begin_year'] . ' to ';
+              echo $su['end_year'];
+              echo ' ['   . $su['child_sys_id'] . ']<br>';
+            }
+  echo '
+       </div>
+    </div>
+  ';
+}
+else {
+echo '<div id="parent_slug">no subunits</div>';
+}
   echo '  </historical-context>';
   echo '</div>';
 
   echo '<div class="src">data source: ';
-  echo '  <data-source>' . $pn['data_src'] . '</data-source>' . $pn['snote_uri'];
+  echo '  <data-source>' . $pn['data_src'] . '</data-source>';
   echo '</div>';
 
 if ($pn['snote_text'] !='') {
@@ -595,7 +795,7 @@ if ($pn['snote_text'] !='') {
 }
 if (($pn['snote_uri'] !='') AND  ($pn['snote_uri'] !='CHGIS')){
   echo '<div class="note">source uri: ';
-  echo '  <source-note-uri><a href="' . $pn['snote_uri'] . '" target="_new">' . $pn['snote_uri'] . '</a></source-note-uri>';
+  echo '  <source-note-uri><a href="' . $pn['snote_uri'] . '" target="_blank">' . $pn['snote_uri'] . '</a></source-note-uri>';
   echo '</div>';
 }
 
@@ -608,7 +808,7 @@ if (($pn['snote_uri'] !='') AND  ($pn['snote_uri'] !='CHGIS')){
   echo '</div>';
 
   echo '</placename>';
-  echo '</div>';  
+  echo '</div>';
   echo '</body></html>';
 }
 

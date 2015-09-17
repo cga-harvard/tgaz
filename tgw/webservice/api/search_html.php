@@ -217,8 +217,8 @@ for (i = 0; i < mapxy.length; i++){
     $t .= " <dl class=\"pn\""  
        . "   <dt class=\"pnt\"><a href=\"placename/" . $htmloop['sys_id'] . "\">". $htmloop['sys_id']  ."</a>  <b>" . $htmloop['name'] . "</b> </dt> \n"
        . "    <dd class=\"pnd\">"
+//       . $transc1 . " <-test "
        .  $transc1  . " begin "
-//       . " (" . $htmloop['transcription']  . ") begin "
        . $htmloop['beg_yr'] 
        . " CE end " . $htmloop['end_yr']
        . " CE [" . $htmloop['x_coord'] . ", " . $htmloop['y_coord']
