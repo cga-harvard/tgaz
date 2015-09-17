@@ -102,8 +102,6 @@ function get_placename($conn, $fmt, $sys_id) {
   }
 
   $pn['self_uri'] =  BASE_URL . '/placename/' . $pn['sys_id'];
-// remove
-//  $pn['self_uri'] = 'http://chgis.harvard.edu/placename/' . $pn['sys_id'];
 
   $spellings = get_deps($conn, "SELECT * FROM v_spelling WHERE placename_id = " . $pn['id'] . ";");
 
@@ -466,7 +464,7 @@ function to_geojson($pn, $spellings) {
 
         .  str_repeat($indent, 3) . "\"properties\" : {\n"
 
-        .  jline('uri', 'http://chgis.harvard.edu/placename/' . $pn['sys_id'], 3)
+        .  jline('uri', BASE_URL  . '/placename/' . $pn['sys_id'], 3)
         .  jline('sys_id', $pn['sys_id'], 3)
 
            //   'spellings'
@@ -602,7 +600,7 @@ function to_pelagios_rdf($pn, $spellings, $partofs, $preslocs) {header('Content-
 
 // foreach in $pnarray
 
-    echo "<http://chgis.hmdc.harvard.edu/placename/" . $pn['sys_id'] . ">  a lawd:Place ;\n";
+    echo "<" . BASE_URL . "/placename/" . $pn['sys_id'] . ">  a lawd:Place ;\n";
     echo "  rdfs:label \"" . $pn['sp_transcribed_form'] . "\" ;\n";   //FIXME if transcribed form missing
 
 //    echo "  skos:closeMatch <http://sws.geonames.org/" . "????" . "/> ;\n";
@@ -625,8 +623,6 @@ function to_pelagios_rdf($pn, $spellings, $partofs, $preslocs) {header('Content-
 
     //  items from $partofs query - with URI only for valid RDF
        foreach ($partofs as $po) {
-// REMOVE
-//    echo "  dcterms:isPartOf <http://chgis.hmdc.harvard.edu/placename/" . $po['parent_sys_id'] . "> ;\n";
     echo "  dcterms:isPartOf <" . BASE_URL . "/placename/" . $po['parent_sys_id'] . "> ;\n";
       }
 
