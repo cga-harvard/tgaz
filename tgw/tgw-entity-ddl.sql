@@ -100,8 +100,9 @@ CREATE TABLE present_loc (
   type                         ENUM('location', 'jurisdiction') NOT NULL,
   country_code                 VARCHAR(8) NOT NULL,
   text_value                   VARCHAR(128) NOT NULL,
-  source                       ENUM('Fudan', 'Google', 'Other') NOT NULL,
+  source                       ENUM('Fudan', 'Google', 'Geonames', 'Other') NOT NULL,
   attestation                  VARCHAR(512),
+  source_uri                   VARCHAR(1028),
 
   PRIMARY KEY (id),
   INDEX presloc_pn_idx (placename_id),
