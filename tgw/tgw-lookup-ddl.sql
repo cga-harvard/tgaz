@@ -142,6 +142,16 @@ CREATE TABLE IF NOT EXISTS ftype (
 -- INSERT INTO ftype VALUES (0, '未知', '未知', 'wei zhi', 'unknown', NULL, NULL, 'CHGIS', NULL, NULL, NULL, NULL);
 -- id = 0 didn't work probably due to the auto_increment, gave id as 1120
 
+-- citation_ref field describes cit_src abbreviations, may be needed when adding new ftypes
+ CREATE TABLE IF NOT EXISTS citation_ref (
+  id INT UNSIGNED auto_increment,
+  ref_handle   VARCHAR(20),   
+  name     VARCHAR(256) NOT NULL,
+  uri      VARCHAR(1024),
+  note     VARCHAR(2048),
+  PRIMARY KEY (id)
+) ENGINE = INNODB;
+
 
 -- needs citation field?
 --
