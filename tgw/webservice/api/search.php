@@ -22,14 +22,14 @@ function search_placename($conn, $name_key, $year_key, $fmt, $src_key, $ftype_ke
 
   if ($pof_key) {
     $query = "SELECT SQL_CALC_FOUND_ROWS DISTINCT pn.sys_id, pn.data_src, pn.name, pn.transcription, pn.beg_yr, pn.end_yr, " .
-      "pn.ftype_vn, pn.ftype_tr, pn.x_coord, pn.y_coord, " .
+      "pn.ftype_vn, pn.ftype_tr, pn.obj_type, pn.x_coord, pn.y_coord, " .
       "pn.parent_sys_id 'parent sys_id', pn.parent_vn 'parent name', pn.parent_tr 'parent transcription' " .
       "FROM mv_pn_srch pn JOIN spelling sp ON (sp.placename_id = pn.id) " .
       "JOIN part_of pof ON (pof.child_id = pn.id) JOIN spelling spp ON (spp.placename_id = pof.parent_id) " .
       "WHERE sp.written_form LIKE ? ";
   } else {
     $query = "SELECT  SQL_CALC_FOUND_ROWS DISTINCT pn.sys_id, pn.data_src, pn.name, pn.transcription, pn.beg_yr, pn.end_yr, " .
-      "pn.ftype_vn, pn.ftype_tr, pn.x_coord, pn.y_coord, " .
+      "pn.ftype_vn, pn.ftype_tr, pn.obj_type, pn.x_coord, pn.y_coord, " .
       "pn.parent_sys_id 'parent sys_id', pn.parent_vn 'parent name', pn.parent_tr 'parent transcription' " .
       "FROM mv_pn_srch pn JOIN spelling sp ON (sp.placename_id = pn.id) " .
       "WHERE sp.written_form LIKE ? ";
@@ -170,6 +170,7 @@ function search_to_json($pns, $name_key, $year_key, $src_key, $ftype_key, $pof_k
           'parent sys_id'   => $pn['parent sys_id'],
           'parent name'     => $parent_name,
           'feature type'    => $pn['ftype_vn'] . " (" . $pn['ftype_tr'] . ")",
+          'object type'     => $pn['obj_type'],
           'xy coordinates'  => $pn['x_coord'] . ", " . $pn['y_coord'],
           'data source'     => $pn['data_src']
         );

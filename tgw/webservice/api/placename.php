@@ -324,7 +324,7 @@ function jarray($n, $a, $d, $last = false) {
   return $s;
 }
 
-/*
+/*  add IDs for elements, added underscores for element names
  */
 function to_esgar($pn, $spellings, $partofs, $precbys, $preslocs, $subunits) {
 
@@ -337,18 +337,18 @@ function to_esgar($pn, $spellings, $partofs, $precbys, $preslocs, $subunits) {
         if ($sp['script_id'] != 0) {                      // has script
             $sp_json[] = array(
                 'id'            =>  $sp['id'],
-                'written form'  =>  $sp['written_form'],
+                'written_form'  =>  $sp['written_form'],
                 'script' =>  $sp['script'],    // split from written form
-                'exonym language' =>  $sp['exonym_lang'],    // FIXME test for null to exclude
-                'attested by'     =>  $sp['attested_by'],
+                'exonym_language' =>  $sp['exonym_lang'],    // FIXME test for null to exclude
+                'attested_by'     =>  $sp['attested_by'],
                 'note'            =>  $sp['note']
             );
         } elseif ($sp['trsys_id'] != 'na') {              // is transcription
             $sp_json[] = array(
                 'id'            =>  $sp['id'],
-                'written form' =>  $sp['written_form'],
-                'transcribed in' => $sp['trsys'],
-                'attested by'             =>  $sp['attested_by'],
+                'written_form' =>  $sp['written_form'],
+                'transcribed_in' => $sp['trsys'],
+                'attested_by'             =>  $sp['attested_by'],
                 'note'                    =>  $sp['note']
             );
         }
@@ -357,9 +357,10 @@ function to_esgar($pn, $spellings, $partofs, $precbys, $preslocs, $subunits) {
     $po_json = array();  //indexed
     foreach ($partofs as $po) {
         $po_json[] = array(
-          'begin year'                 => $po['begin_year'],
-          'end year'                 => $po['end_year'],
-          'parent id'             => $po['parent_sys_id'],
+          'id'                    => $po['id'],
+          'begin_year'            => $po['begin_year'],
+          'end_year'              => $po['end_year'],
+          'parent_id'             => $po['parent_sys_id'],
           'name'                  => $po['parent_vn'],
           'transcribed'           => $po['parent_tr']
         );
@@ -368,9 +369,10 @@ function to_esgar($pn, $spellings, $partofs, $precbys, $preslocs, $subunits) {
     $su_json = array();
     foreach ($subunits as $su) {
         $su_json[] = array(
+          'id'                    => $su['id'],
           'begin_year'            => $su['begin_year'],
           'end_year'              => $su['end_year'],
-          'child id'              => $su['child_sys_id'],
+          'child_id'              => $su['child_sys_id'],
           'name'                  => $su['child_vn'],
           'transcribed'           => $su['child_tr']
         );
@@ -379,7 +381,8 @@ function to_esgar($pn, $spellings, $partofs, $precbys, $preslocs, $subunits) {
     $pb_json = array();  //indexed
     foreach ($precbys as $pb) {
         $pb_json[] = array(
-          'preceded by id'             => $pb['pb_sys_id'],
+          'id'                    => $pb['id'],
+          'preceded_by_id'        => $pb['pb_sys_id'],
           'name'                  => $pb['pb_vn'],
           'transcribed'           => $pb['pb_tr']
         );
@@ -388,7 +391,8 @@ function to_esgar($pn, $spellings, $partofs, $precbys, $preslocs, $subunits) {
     $ploc_json = array();  //indexed
     foreach ($preslocs as $ploc) {
         $ploc_json[] = array(
-           'country code'         => $ploc['country_code'],
+           'id'         => $ploc['id'],
+           'country_code'         => $ploc['country_code'],
            'text'                 => $ploc['text_value'],
            'source'               => $ploc['source'],
            'attestation'          => $ploc['attestation']
@@ -399,22 +403,23 @@ function to_esgar($pn, $spellings, $partofs, $precbys, $preslocs, $subunits) {
         .  jline('license', LIC, 0)
         .  jline('uri', BASE_URL . '/placename/' . $pn['sys_id'], 0)
         .  jline('sys_id', $pn['sys_id'], 0)
-        .  jline('sys_id of alternate', $pn['alt_of_id'], 0)
+        .  jline('sys_id_of_alternate', $pn['alt_of_id'], 0)
 
         .  jarray('spellings', $sp_json, 0)
 
         .  $indent . "\"feature_type\" : {\n"
+        .  jline('id', $pn['ftype_id'], 1)
         .  jline('name', $pn['ftype_vn'], 1)
-        .  jline('alternate name', $pn['ftype_alt'], 1)
+        .  jline('alternate_name', $pn['ftype_alt'], 1)
         .  jline('transcription', $pn['ftype_tr'], 1)
         .  jline('English', $pn['ftype_en'], 1, true)
         .  $indent . "},\n"
 
         .  $indent . "\"temporal\" : {\n"
         .  jline('begin', $pn['beg_yr'], 1)
-        .  jline('begin rule', $pn['beg_rule_id'], 1)
+        .  jline('begin_rule', $pn['beg_rule_id'], 1)
         .  jline('end', $pn['end_yr'], 1)
-        .  jline('end rule', $pn['end_rule_id'], 1, true)
+        .  jline('end_rule', $pn['end_rule_id'], 1, true)
         .  $indent . "},\n"
 
         .  $indent . "\"spatial\" : {\n"
@@ -428,15 +433,15 @@ function to_esgar($pn, $spellings, $partofs, $precbys, $preslocs, $subunits) {
         .  $indent . "},\n"
 
         .  $indent . "\"historical_context\" : {\n"
-        .  jarray('part of',         $po_json, 1)
-        .  jarray('subordinate units',  $su_json, 1)
-        .  jarray('preceded by',     $pb_json, 1, true)
+        .  jarray('part_of',         $po_json, 1)
+        .  jarray('subordinate_units',  $su_json, 1)
+        .  jarray('preceded_by',     $pb_json, 1, true)
         .  $indent . "},\n"
 
-
-        .  jline('data source',     $pn['data_src'], 0)
-        .  jline('source note',     $pn['snote_text'], 0)
-        .  jline('source uri',     $pn['snote_uri'], 0, true)
+        .  jline('data_source',     $pn['data_src'], 0)
+        .  jline('source_note',     $pn['snote_text'], 0)
+        .  jline('source_note_id',  $pn['snote_ref'], 0)
+        .  jline('source_uri',      $pn['snote_uri'], 0, true)
         . "}";
 
   header('Content-Type: text/json; charset=utf-8');
