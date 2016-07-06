@@ -1,20 +1,20 @@
-# TGaz
+## TGAZ
 
-##Temporal Gazetteer API [http://maps.cga.harvard.edu/tgaz/] (http://maps.cga.harvard.edu/tgaz/)
+###Temporal Gazetteer API > [http://maps.cga.harvard.edu/tgaz/] (http://maps.cga.harvard.edu/tgaz/)
 
-##Data  Raw Datafiles
+###Data = Raw Datafiles
 
-##TGW  Temporal Gazetteer Webservice
+###TGW =  Temporal Gazetteer Webservice
 
-###Table definitions
+####Table definitions
 
 see .ddl files for MySQL/MariaDB
 
-###Webservice
+####Webservice
 
 The API is written in .php and contains a few wrapping pages for examples, graphics and basic .css.
 
-## Data output formats
+#### Data output formats
 
 * To XML per the CHGIS API
 * To JSON per the CHGIS API
