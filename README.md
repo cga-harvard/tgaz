@@ -4,15 +4,13 @@
 
 ###Data = Raw Datafiles
 
-###TGW =  Temporal Gazetteer Webservice
+* CSV with links back to complete records 
 
-####Table definitions
+###tgw =  Temporal Gazetteer Webservice
+
+####For Table definitions
 
 see .ddl files for MySQL/MariaDB
-
-####Webservice
-
-The API is written in .php and contains a few wrapping pages for examples, graphics and basic .css.
 
 #### Data output formats
 
