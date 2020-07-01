@@ -492,7 +492,7 @@ function to_geojson($pn, $spellings) {
 
 }
 
-function to_xml($pn, $spellings, $partofs, $preslocs, $preslocs, $subunits) {
+function to_xml($pn, $spellings, $partofs, $precbys, $preslocs, $subunits) {
   header('Content-Type: text/xml; charset=utf-8');
   echo  "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
   // DOCTYPE published ??
