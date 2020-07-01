@@ -120,14 +120,14 @@ function search_to_html($pns, $name_key, $year_key, $src_key, $ftype_key, $pof_k
 
    // end of if ($pg > 1) wrapper
 
-    $pages .= "<div class=\"pages\">" . $pg_nav . "</div><!-- end \"pages\" -->\n";
-
+    $pages = "<div class=\"pages\">" . $pg_nav . "</div><!-- end \"pages\" -->\n";
+    // changed .=  to  =  per issue from sudoghut
    
 
 //  end pagination section
 
-
-    $t .= "<div class=\"webmap_area\">"      
+    // changed .=  to  =  per issue from sudoghut
+    $t = "<div class=\"webmap_area\">"      
        . "<div id=\"map\" style=\"width: 600px; height: 260px\"></div>"
        . "</div><!-- end \"webmap_area\" -->\n";
 
