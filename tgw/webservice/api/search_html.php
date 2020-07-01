@@ -14,27 +14,27 @@ function search_to_html($pns, $name_key, $year_key, $src_key, $ftype_key, $pof_k
     $ckcount = count($pns);
  
      if ($name_key != ''){
-      $echo_nm = ' name=<b>'.$name_key .'</b>';
+      $echo_nm = ' name=<b>' . htmlspecialchars($name_key) . '</b>';
      }
      else {$echo_nm='';}
 
      if ($year_key != ''){
-      $echo_yr = ' yr=<b>'.$year_key .'</b>';
+      $echo_yr = ' yr=<b>' . htmlspecialchars($year_key) . '</b>';
      }
      else {$echo_yr='';}
 
      if ($ftype_key != ''){
-      $echo_ft = ' type=<b>'.$ftype_key .'</b>';
+      $echo_ft = ' type=<b>' . htmlspecialchars($ftype_key) . '</b>';
      }
      else {$echo_ft='';}
 
      if ($pof_key != ''){      
-      $echo_pof = ' parent=<b>'.$pof_key .'</b>';
+      $echo_pof = ' parent=<b>' . htmlspecialchars($pof_key) . '</b>';
      }
      else {$echo_pof='';}
 
      if ($src_key != ''){      
-      $echo_src = ' src=<b>'.$src_key .'</b>';
+      $echo_src = ' src=<b>' . htmlspecialchars($src_key) . '</b>';
      }
      else {$echo_src='';}
 
