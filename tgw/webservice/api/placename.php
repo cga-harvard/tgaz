@@ -492,7 +492,7 @@ function to_geojson($pn, $spellings) {
 
 }
 
-function to_xml($pn, $spellings, $partofs, $precbys, $preslocs, $subunits) {
+function to_xml($pn, $spellings, $partofs, $preslocs, $subunits) {
   header('Content-Type: text/xml; charset=utf-8');
   echo  "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
   // DOCTYPE published ??
@@ -658,7 +658,7 @@ function to_html($pn, $spellings, $partofs, $precbys, $preslocs, $subunits) {
     <link rel="stylesheet" type="text/css"  href="/tgaz/css/btn.css">
    </head>
 
-   <script type="text/javascript" src="' . BASE_URL . '/lib/jquery.min.js"></script>
+   <script type="text/javascript" src="' . BASE_URL . '/js/jquery.min.js"></script>
    <script type="text/javascript">
     function toggleDiv(divId) {
      $("#"+divId).toggle();

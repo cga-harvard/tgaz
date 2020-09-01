@@ -9,7 +9,7 @@ require ("./search_html.php");
 
 // use persistent connection with "p:" prepended to the hostname
 // echo "$db_addr $db_user<hr>";
-$conn = mysqli_connect("p:$db_addr", "$db_user", "$db_pass", "$db_name");
+$conn = mysqli_connect("$db_addr", "$db_user", "$db_pass", "$db_name");
 
 $conn->set_charset("utf8");
 
