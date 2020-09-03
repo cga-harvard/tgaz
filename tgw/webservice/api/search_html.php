@@ -14,27 +14,27 @@ function search_to_html($pns, $name_key, $year_key, $src_key, $ftype_key, $pof_k
     $ckcount = count($pns);
  
      if ($name_key != ''){
-      $echo_nm = ' name=<b>' . htmlspecialchars($name_key) . '</b>';
+      $echo_nm = ' name=<b>'.$name_key .'</b>';
      }
      else {$echo_nm='';}
 
      if ($year_key != ''){
-      $echo_yr = ' yr=<b>' . htmlspecialchars($year_key) . '</b>';
+      $echo_yr = ' yr=<b>'.$year_key .'</b>';
      }
      else {$echo_yr='';}
 
      if ($ftype_key != ''){
-      $echo_ft = ' type=<b>' . htmlspecialchars($ftype_key) . '</b>';
+      $echo_ft = ' type=<b>'.$ftype_key .'</b>';
      }
      else {$echo_ft='';}
 
      if ($pof_key != ''){      
-      $echo_pof = ' parent=<b>' . htmlspecialchars($pof_key) . '</b>';
+      $echo_pof = ' parent=<b>'.$pof_key .'</b>';
      }
      else {$echo_pof='';}
 
      if ($src_key != ''){      
-      $echo_src = ' src=<b>' . htmlspecialchars($src_key) . '</b>';
+      $echo_src = ' src=<b>'.$src_key .'</b>';
      }
      else {$echo_src='';}
 
@@ -50,12 +50,14 @@ function search_to_html($pns, $name_key, $year_key, $src_key, $ftype_key, $pof_k
 
     $top .="<title>TGAZ - Query Results</title>\n"
        . "<meta charset='utf-8' />\n"
-       . "<link rel='icon' href='tgaz/graf/tgaz.ico'>\n"
-       . "<link rel='stylesheet' href='/tgaz/css/api.css'/>\n"
-       . "<link rel='stylesheet' href='http://cdn.leafletjs.com/leaflet-0.7/leaflet.css'/>\n"
-       . "<script src='http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js'></script>\n"
-       . "<script src='http://static.outofedenwalk.com/ooe/vendor/leaflet/oms.min.js'></script>\n"
-       . "<script src='http://cdn.leafletjs.com/leaflet-0.7/leaflet.js'></script>\n";
+       . "<link rel='icon' href='/tgaz/graf/tgaz.ico'>\n"
+       . "<link rel='stylesheet' href='https://maps.cga.harvard.edu/tgaz/css/leaflet.css'/>\n"
+       //. "<link rel='stylesheet' href='http://cdn.leafletjs.com/leaflet-0.7/leaflet.css'/>\n"
+       //. "<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js'></script>\n"
+       //. "<script src='http://static.outofedenwalk.com/ooe/vendor/leaflet/oms.min.js'></script>\n"
+       //. "<script src='http://cdn.leafletjs.com/leaflet-0.7/leaflet.js'></script>\n";
+       . "<script src='https://maps.cga.harvard.edu/tgaz/js/jquery.min.js'></script>\n"
+       . "<script src='https://maps.cga.harvard.edu/tgaz/js/leaflet.js'></script>\n";
 
     $top .= "</head>\n<body>\n";
     $top .= "<div class=\"wrap\">";
@@ -121,12 +123,12 @@ function search_to_html($pns, $name_key, $year_key, $src_key, $ftype_key, $pof_k
    // end of if ($pg > 1) wrapper
 
     $pages = "<div class=\"pages\">" . $pg_nav . "</div><!-- end \"pages\" -->\n";
-    // changed .=  to  =  per issue from sudoghut
+
    
 
 //  end pagination section
 
-    // changed .=  to  =  per issue from sudoghut
+
     $t = "<div class=\"webmap_area\">"      
        . "<div id=\"map\" style=\"width: 600px; height: 260px\"></div>"
        . "</div><!-- end \"webmap_area\" -->\n";
