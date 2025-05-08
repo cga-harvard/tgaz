@@ -2,7 +2,7 @@
 
 #### generated:  2016-07-06
 #### records:  71647
-### Extracted from TGAZ  [http://maps.cga.harvard.edu/tgaz/] (http://maps.cga.harvard.edu/tgaz/)
+### Extracted from TGAZ  [https://maps.cga.harvard.edu/tgaz/] (https://maps.cga.harvard.edu/tgaz/)
 
 ### Data Dictionary
 

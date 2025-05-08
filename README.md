@@ -1,6 +1,6 @@
 ## TGAZ
 
-__Temporal Gazetteer API__ > [http://maps.cga.harvard.edu/tgaz/] (http://maps.cga.harvard.edu/tgaz/)
+__Temporal Gazetteer API__ > [https://maps.cga.harvard.edu/tgaz/] (https://maps.cga.harvard.edu/tgaz/)
 
 __Data__ = Raw Datafiles
 

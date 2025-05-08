@@ -1,7 +1,7 @@
 <!--Force IE6 into quirks mode with this comment tag-->
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+"https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="https://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title>Temporal Gazetteer</title>
@@ -62,21 +62,21 @@
       <a name="usage"></a>
 
       <h2 id="intro">Usage</h2>
-      <p>The TGAZ web service is designed to receive <a href="http://en.wikipedia.org/wiki/Representational_State_Transfer" target="_new">RESTful URIs</a> containing query values, and to return the results in XML format by default.  The interface is READ-ONLY and currently provides two functions:
+      <p>The TGAZ web service is designed to receive <a href="https://en.wikipedia.org/wiki/Representational_State_Transfer" target="_new">RESTful URIs</a> containing query values, and to return the results in XML format by default.  The interface is READ-ONLY and currently provides two functions:
 
       <ol>
        <li><strong>Canonical Placename Search</strong>
-        <br>method ->  http://maps.cga.harvard.edu/tgaz/placename/UNIQUE_ID</li>
+        <br>method ->  https://maps.cga.harvard.edu/tgaz/placename/UNIQUE_ID</li>
         <p>
        <li><strong>Faceted Search</strong>
-        <br>method ->  http://maps.cga.harvard.edu/tgaz/placename?QUERY_PARAMETER=VALUE</li>
+        <br>method ->  https://maps.cga.harvard.edu/tgaz/placename?QUERY_PARAMETER=VALUE</li>
         <p>  
       </ol>
 
       <p>Instructions:
      <ol>
       <li><u>Canonical Placename Records</u> - replace UNIQUE_ID with the unique placename ID to be searched. 
-(The IDs being used are being minted for the TGAZ database with the prefix <strong>hvd_</strong>.  For example, the IDs listed in the <a href="http://www.fas.harvard.edu/~chgis/data/chgis/downloads/v4/datasets/index.html">CHGIS data layers</a> would have the prefix added, such as CHGIS ID 32180 = TGAZ ID hvd_32180). </li>
+(The IDs being used are being minted for the TGAZ database with the prefix <strong>hvd_</strong>.  For example, the IDs listed in the <a href="https://www.fas.harvard.edu/~chgis/data/chgis/downloads/v4/datasets/index.html">CHGIS data layers</a> would have the prefix added, such as CHGIS ID 32180 = TGAZ ID hvd_32180). </li>
       <p />
       <li><u>Faceted Search</u> - allows for a combinated of query parameters to be searched.   A PLACENAME, YEAR, FEATURE TYPE, DATA SOURCE, and IMMEDIATE PARENT can be sent in the form of a query string, such as:  <strong>?n=mengla&yr=1820&ftyp=xian</strong>. Note:  the default output is XML, which can be reset using a FORMAT parameter, such as <strong>fmt=json</strong></li>
      </ol>
@@ -91,15 +91,15 @@ Note: for historical records the valid years of the database are -222 to 1911.
      <a name="examples"></a>
       <h2 id="intro">Canonical Placename</h2>
       <ul>
-       <li><a href="http://maps.cga.harvard.edu/tgaz/placename/hvd_32180" target="_new">http://maps.cga.harvard.edu/tgaz/placename/hvd_32180</a></li>
+       <li><a href="https://maps.cga.harvard.edu/tgaz/placename/hvd_32180" target="_new">https://maps.cga.harvard.edu/tgaz/placename/hvd_32180</a></li>
       </ul>
 
       <p><strong>Canonical Placename Formats</strong>
       <ul>
-        <li><strong>json  </strong><a href="http://maps.cga.harvard.edu/tgaz/placename/json/hvd_80547" target="_new">http://maps.cga.harvard.edu/tgaz/placename/json/hvd_80547</a></li>
-        <li><strong>rdf  </strong><a href="http://maps.cga.harvard.edu/tgaz/placename/rdf/hvd_135744" target="_new">http://maps.cga.harvard.edu/tgaz/placename/rdf/hvd_135744</a></li>
-        <li><strong>html  </strong><a href="http://maps.cga.harvard.edu/tgaz/placename/html/hvd_9732" target="_new">http://maps.cga.harvard.edu/tgaz/placename/html/hvd_9732</a></li>
-        <li><strong>xml  </strong><a href="http://maps.cga.harvard.edu/tgaz/placename/xml/hvd_96066" target="_new">http://maps.cga.harvard.edu/tgaz/placename/xml/hvd_96066</a></li>
+        <li><strong>json  </strong><a href="https://maps.cga.harvard.edu/tgaz/placename/json/hvd_80547" target="_new">https://maps.cga.harvard.edu/tgaz/placename/json/hvd_80547</a></li>
+        <li><strong>rdf  </strong><a href="https://maps.cga.harvard.edu/tgaz/placename/rdf/hvd_135744" target="_new">https://maps.cga.harvard.edu/tgaz/placename/rdf/hvd_135744</a></li>
+        <li><strong>html  </strong><a href="https://maps.cga.harvard.edu/tgaz/placename/html/hvd_9732" target="_new">https://maps.cga.harvard.edu/tgaz/placename/html/hvd_9732</a></li>
+        <li><strong>xml  </strong><a href="https://maps.cga.harvard.edu/tgaz/placename/xml/hvd_96066" target="_new">https://maps.cga.harvard.edu/tgaz/placename/xml/hvd_96066</a></li>
                
 
        </ul>
@@ -117,38 +117,38 @@ Note: for historical records the valid years of the database are -222 to 1911.
 
       <p><strong>Placename Examples</strong>
       <ul>
-       <li><a href="http://maps.cga.harvard.edu/tgaz/placename?n=tianbian" target="_new">http://maps.cga.harvard.edu/tgaz/placename?n=Tianbian</a></li>
-       <li><a href="http://maps.cga.harvard.edu/tgaz/placename?n=晋阳" target="_new">http://maps.cga.harvard.edu/tgaz/placename?n=晋阳</a></li>
+       <li><a href="https://maps.cga.harvard.edu/tgaz/placename?n=tianbian" target="_new">https://maps.cga.harvard.edu/tgaz/placename?n=Tianbian</a></li>
+       <li><a href="https://maps.cga.harvard.edu/tgaz/placename?n=晋阳" target="_new">https://maps.cga.harvard.edu/tgaz/placename?n=晋阳</a></li>
       </ul>
 
       <p><strong>Placename & Format Examples</strong>
       <ul>
-       <li><a href="http://maps.cga.harvard.edu/tgaz/placename?fmt=json&n=滚弄" target="_new">http://maps.cga.harvard.edu/tgaz/placename?fmt=json&n=滚弄</a></li>
-       <li><a href="http://maps.cga.harvard.edu/tgaz/placename?fmt=html&n=Rui%27an%20Xian" target="_new">http://maps.cga.harvard.edu/tgaz/placename?fmt=html&n=Rui'an Xian</a></li>
-       <li><a href="http://maps.cga.harvard.edu/tgaz/placename?fmt=xml&n=温州" target="_new">http://maps.cga.harvard.edu/tgaz/placename?fmt=xml&n=温州</a></li>
+       <li><a href="https://maps.cga.harvard.edu/tgaz/placename?fmt=json&n=滚弄" target="_new">https://maps.cga.harvard.edu/tgaz/placename?fmt=json&n=滚弄</a></li>
+       <li><a href="https://maps.cga.harvard.edu/tgaz/placename?fmt=html&n=Rui%27an%20Xian" target="_new">https://maps.cga.harvard.edu/tgaz/placename?fmt=html&n=Rui'an Xian</a></li>
+       <li><a href="https://maps.cga.harvard.edu/tgaz/placename?fmt=xml&n=温州" target="_new">https://maps.cga.harvard.edu/tgaz/placename?fmt=xml&n=温州</a></li>
       </ul>
 
       <p><strong>Placename & Year Examples</strong>
       <ul>
-       <li><a href="http://maps.cga.harvard.edu/tgaz/placename?fmt=html&n=龍&yr=800" target="_new">http://maps.cga.harvard.edu/tgaz/placename?fmt=html&n=龍&yr=800</a></li>
-       <li><a href="http://maps.cga.harvard.edu/tgaz/placename?fmt=html&n=雙&yr=300" target="_new">http://maps.cga.harvard.edu/tgaz/placename?fmt=html&n=雙&yr=300</a></li>
+       <li><a href="https://maps.cga.harvard.edu/tgaz/placename?fmt=html&n=龍&yr=800" target="_new">https://maps.cga.harvard.edu/tgaz/placename?fmt=html&n=龍&yr=800</a></li>
+       <li><a href="https://maps.cga.harvard.edu/tgaz/placename?fmt=html&n=雙&yr=300" target="_new">https://maps.cga.harvard.edu/tgaz/placename?fmt=html&n=雙&yr=300</a></li>
       </ul>
 
       <p><strong>Placename & Feature Type Examples</strong>
       <ul>
-       <li><a href="http://maps.cga.harvard.edu/tgaz/placename?fmt=html&n=meng&ftyp=州" target="_new">http://maps.cga.harvard.edu/tgaz/placename?fmt=html&n=meng&ftyp=州</a></li>
-       <li><a href="http://maps.cga.harvard.edu/tgaz/placename?fmt=html&n=鮑&ftyp=cun%20zhen" target="_new">http://maps.cga.harvard.edu/tgaz/placename?fmt=html&n=鮑&ftyp=cun zhen</a></li>
+       <li><a href="https://maps.cga.harvard.edu/tgaz/placename?fmt=html&n=meng&ftyp=州" target="_new">https://maps.cga.harvard.edu/tgaz/placename?fmt=html&n=meng&ftyp=州</a></li>
+       <li><a href="https://maps.cga.harvard.edu/tgaz/placename?fmt=html&n=鮑&ftyp=cun%20zhen" target="_new">https://maps.cga.harvard.edu/tgaz/placename?fmt=html&n=鮑&ftyp=cun zhen</a></li>
       </ul>
 
       <p><strong>Placename & Part-of Parent Unit Examples</strong>
       <ul>
-       <li><a href="http://maps.cga.harvard.edu/tgaz/placename?fmt=html&n=茹&p=上谷郡" target="_new">http://maps.cga.harvard.edu/tgaz/placename?fmt=html&n=茹&p=上谷郡</a></li>
-       <li><a href="http://maps.cga.harvard.edu/tgaz/placename?fmt=html&n=盧溪&p=黔中" target="_new">http://maps.cga.harvard.edu/tgaz/placename?fmt=html&n=盧溪&p=黔中</a></li>
+       <li><a href="https://maps.cga.harvard.edu/tgaz/placename?fmt=html&n=茹&p=上谷郡" target="_new">https://maps.cga.harvard.edu/tgaz/placename?fmt=html&n=茹&p=上谷郡</a></li>
+       <li><a href="https://maps.cga.harvard.edu/tgaz/placename?fmt=html&n=盧溪&p=黔中" target="_new">https://maps.cga.harvard.edu/tgaz/placename?fmt=html&n=盧溪&p=黔中</a></li>
       </ul>
 
       <p><strong>Multi-Parameter Faceted Search Examples</strong>
       <ul>
-       <li><a href="http://maps.cga.harvard.edu/tgaz/placename?fmt=html&n=庆&ftyp=xian&yr=1420&p=Chuzhou" target="_new">http://maps.cga.harvard.edu/tgaz/placename?fmt=html&n=庆&ftyp=xian&yr=1420&P=Chuzhou</a></li>
+       <li><a href="https://maps.cga.harvard.edu/tgaz/placename?fmt=html&n=庆&ftyp=xian&yr=1420&p=Chuzhou" target="_new">https://maps.cga.harvard.edu/tgaz/placename?fmt=html&n=庆&ftyp=xian&yr=1420&P=Chuzhou</a></li>
       </ul>
 
 

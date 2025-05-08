@@ -1,13 +1,13 @@
 TGAZ MySQL Database
 
-[Temporal Gazetteer MySQL Database](http://maps.cga.harvard.edu)
+[Temporal Gazetteer MySQL Database](https://maps.cga.harvard.edu)
 
 Published: 2019-02-21
 
 Author:  Merrick Lex Berman
 
 Website, API:
-http://maps.cga.harvard.edu
+https://maps.cga.harvard.edu
 
 Github: 
 https://github.com/cga-harvard/tgaz
